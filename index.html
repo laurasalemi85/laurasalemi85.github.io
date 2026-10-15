@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Decision Matrix</title>
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--ink:#1d2433;--muted:#6b7385;--accent:#4f46e5;--win:#10b981;--line:#e3e7ef}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+main{max-width:900px;margin:0 auto;padding:16px}
+h1{font-size:1.5rem;margin:8px 0 16px}h2{font-size:1.1rem;margin:0 0 4px}
+.card{background:var(--card);border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.hint{color:var(--muted);font-size:.85rem;margin:0 0 10px}
+input[type=text]{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:1rem}
+select{padding:8px;border:1px solid var(--line);border-radius:8px;font-size:1rem;background:#fff}
+.mv{padding:6px 9px}.row{display:flex;gap:6px;align-items:center;margin-bottom:8px}.row input{flex:1}
+button{touch-action:manipulation;-webkit-tap-highlight-color:transparent;min-height:40px;border:0;border-radius:8px;padding:9px 14px;font-size:.95rem;cursor:pointer;background:var(--accent);color:#fff}
+button.ghost{background:#eef0f6;color:var(--ink)}button.x{background:transparent;color:#c0392b;padding:6px 10px;font-size:1.1rem}
+button:disabled{opacity:.4;cursor:not-allowed}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.warn{color:#b45309;font-size:.85rem;margin-top:6px}
+.tablewrap{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:420px}
+th,td{padding:8px;border-bottom:1px solid var(--line);text-align:center;font-size:.9rem}th:first-child,td:first-child{text-align:left}
+.w{color:var(--muted);font-weight:normal;font-size:.75rem}
+.res{padding:10px;border-radius:10px;margin-bottom:8px;border:1px solid var(--line)}
+.res.win{border:2px solid var(--win);background:#ecfdf5}
+.res .top{display:flex;justify-content:space-between;gap:8px;font-weight:600}
+.bar{height:12px;background:#eef0f6;border-radius:6px;margin-top:6px;overflow:hidden}.bar>div{height:100%;background:var(--accent)}
+.res.win .bar>div{background:var(--win)}
+.badge{background:var(--win);color:#fff;border-radius:6px;padding:1px 8px;font-size:.75rem;margin-left:6px}
+.example{background:#fff7ed;color:#9a3412;border-radius:8px;padding:8px 10px;font-size:.85rem;margin-bottom:14px}
+</style></head><body><noscript><p style="padding:16px;background:#fee2e2">This app needs JavaScript. If you're viewing it in a file preview, open it in Safari/Chrome or use the web link.</p></noscript><main>
+<h1>⚖️ Decision Matrix</h1>
+<div class="toolbar"><button id="ex" class="ghost">Load car example</button><button id="reset" class="ghost">Reset</button></div>
+<div id="exnote" class="example" hidden>Showing <b>example data</b>: the scores are illustrative, not real reviews. Change them to fit your own priorities.</div>
+<section class="card"><h2>1. Decision</h2><p class="hint">What are you deciding?</p><input type="text" id="title" placeholder="e.g. Which car to buy"></section>
+<section class="card"><h2>2. Criteria (5–10)</h2><p class="hint">Rename inline, set importance (1 = low, 5 = most important), reorder with ↑↓, or remove at any time.</p><div id="crit"></div><button id="addC">+ Add criterion</button><div id="cwarn" class="warn"></div></section>
+<section class="card"><h2>3. Options (2+)</h2><div id="opts"></div><button id="addO">+ Add option</button><div id="owarn" class="warn"></div></section>
+<section class="card"><h2>4. Score each option (1–5)</h2><p class="hint">5 = performs best on that criterion.</p><div class="tablewrap" id="grid"></div></section>
+<section class="card"><h2>5. Results</h2><p class="hint" id="rtitle"></p><div id="results"></div></section>
+</main><script>
+const KEY='decisionMatrix.v1',MINC=5,MAXC=10;
+const blank=()=>({title:'',example:false,criteria:Array.from({length:5},()=>({name:'',weight:3})),options:[{name:''},{name:''}],scores:{}});
+let S;try{S=JSON.parse(localStorage.getItem(KEY))||blank()}catch(e){S=blank()}
+const $=id=>document.getElementById(id);
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){/* storage unavailable (private mode / file preview): keep working in memory */}}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let uid=Date.now();const id=()=>(uid++).toString(36);
+function ensureIds(){S.criteria.forEach(function(c){if(!c.id)c.id=id()});S.options.forEach(function(o){if(!o.id)o.id=id()})}
+const sel=(v,cls,data)=>`<select class="${cls}" ${data}>${[1,2,3,4,5].map(n=>`<option ${n==v?'selected':''}>${n}</option>`).join('')}</select>`;
+const sc=(o,c)=>{const v=S.scores[o.id+'|'+c.id];return v==null?3:v};
+function render(){ensureIds();
+ $('title').value=S.title;$('exnote').hidden=!S.example;
+ $('crit').innerHTML=S.criteria.map((c,i)=>`<div class="row"><input type="text" data-c="${i}" value="${esc(c.name)}" placeholder="Criterion ${i+1}">${sel(c.weight,'cw',`data-c="${i}"`)}<button class="ghost mv" data-mc="${i}" data-dir="-1" ${i==0?'disabled':''} title="Move up">↑</button><button class="ghost mv" data-mc="${i}" data-dir="1" ${i==S.criteria.length-1?'disabled':''} title="Move down">↓</button><button class="x" data-dc="${i}" ${S.criteria.length<=1?'disabled':''} title="Remove">✕</button></div>`).join('');
+ $('addC').disabled=S.criteria.length>=MAXC;
+ $('cwarn').textContent=S.criteria.length>=MAXC?'Maximum of 10 criteria reached.':S.criteria.length<MINC?`Add ${MINC-S.criteria.length} more criteri${MINC-S.criteria.length===1?"on":"a"} (minimum 5) to see results.`:'';
+ $('opts').innerHTML=S.options.map((o,i)=>`<div class="row"><input type="text" data-o="${i}" value="${esc(o.name)}" placeholder="Option ${i+1}"><button class="x" data-do="${i}" ${S.options.length<=2?'disabled':''} title="Remove">✕</button></div>`).join('');
+ $('owarn').textContent=S.options.length<=2?'At least 2 options are required.':'';
+ renderGrid();renderResults()}
+const cn=(c,i)=>c.name.trim()||`Criterion ${i+1}`,on=(o,i)=>o.name.trim()||`Option ${i+1}`;
+function renderGrid(){$('grid').innerHTML=`<table><tr><th>Criterion</th>${S.options.map((o,i)=>`<th>${esc(on(o,i))}</th>`).join('')}</tr>${S.criteria.map((c,ci)=>`<tr><td>${esc(cn(c,ci))} <span class="w">×${c.weight}</span></td>${S.options.map(o=>`<td>${sel(sc(o,c),'sc',`data-k="${o.id}|${c.id}"`)}</td>`).join('')}</tr>`).join('')}</table>`}
+function renderResults(){if(S.criteria.length<MINC||S.criteria.length>MAXC){$('rtitle').textContent='';$('results').innerHTML=`<p class="hint">Results appear once you have 5–10 criteria (currently ${S.criteria.length}).</p>`;return}const max=S.criteria.reduce((a,c)=>a+c.weight*5,0);
+ const r=S.options.map((o,i)=>({name:on(o,i),t:S.criteria.reduce((a,c)=>a+c.weight*sc(o,c),0)})).sort((a,b)=>b.t-a.t);
+ const top=r[0].t,tie=r.filter(x=>x.t===top).length>1;
+ $('rtitle').textContent=(S.title.trim()||'Your decision')+` (max possible ${max} points)`;
+ $('results').innerHTML=r.map((x,i)=>{const p=max?Math.round(x.t/max*100):0,w=x.t===top;return `<div class="res ${w?'win':''}"><div class="top"><span>#${i+1} ${esc(x.name)}${w?`<span class="badge">${tie?'Tie':'Winner'}</span>`:''}</span><span>${x.t} · ${p}%</span></div><div class="bar"><div style="width:${p}%"></div></div></div>`}).join('')}
+document.addEventListener('input',e=>{const t=e.target,d=t.dataset;
+ if(t.id==='title')S.title=t.value;
+ else if(d.c!==undefined&&t.tagName==='INPUT')S.criteria[d.c].name=t.value;
+ else if(d.o!==undefined)S.options[d.o].name=t.value;
+ else return;S.example=false;save();renderGrid();renderResults()});
+document.addEventListener('change',e=>{const t=e.target,d=t.dataset;
+ if(t.classList.contains('cw'))S.criteria[d.c].weight=+t.value;else if(t.classList.contains('sc'))S.scores[d.k]=+t.value;else return;
+ save();render()});
+document.addEventListener('click',e=>{const d=e.target.dataset;
+ if(d.dc!==undefined&&S.criteria.length>1)S.criteria.splice(d.dc,1);
+ else if(d.mc!==undefined){const i=+d.mc,j=i+ +d.dir;if(j<0||j>=S.criteria.length)return;[S.criteria[i],S.criteria[j]]=[S.criteria[j],S.criteria[i]]}
+ else if(d.do!==undefined&&S.options.length>2)S.options.splice(d.do,1);else return;save();render()});
+$('addC').onclick=()=>{if(S.criteria.length<MAXC){S.criteria.push({name:'',weight:3});save();render()}};
+$('addO').onclick=()=>{S.options.push({name:''});save();render()};
+let armed=0;$('reset').onclick=()=>{const b=$('reset');if(!armed){armed=setTimeout(()=>{armed=0;b.textContent='Reset'},3000);b.textContent='Tap again to clear';return}clearTimeout(armed);armed=0;b.textContent='Reset';S=blank();save();render()};
+function loadExample(){
+ const C=[['Full self-driving',5],['Price',4],['Range',4],['Safety',5],['Comfort',3]],O=['Tesla Model YL','Rivian R2','Toyota Land Cruiser'];
+ const M=[[5,3,1],[3,3,2],[4,3,2],[5,4,4],[4,4,5]]; // example scores only
+ S={title:'Which car to buy',example:true,criteria:C.map(([name,weight])=>({id:id(),name,weight})),options:O.map(name=>({id:id(),name})),scores:{}};
+ C.forEach((_,ci)=>O.forEach((_,oi)=>S.scores[S.options[oi].id+'|'+S.criteria[ci].id]=M[ci][oi]));save();render()}
+$('ex').onclick=loadExample;
+if(new URLSearchParams(location.search).has('example'))loadExample();
+render();
+</script></body></html>
