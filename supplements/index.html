@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Supplements">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f6f4ef">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<title>Daily Supplements</title>
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--ink:#23302b;--mut:#7b8580;--line:#e8e4dc;--acc:#4f9a80;--acc2:#e9f3ee;--warn:#c9822f;--warnbg:#fdf1e2;--bad:#c4554d}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text",Helvetica,Arial,sans-serif}
+body{padding:env(safe-area-inset-top) 0 calc(76px + env(safe-area-inset-bottom))}
+.wrap{max-width:540px;margin:0 auto;padding:0 16px}
+header{display:flex;justify-content:space-between;align-items:flex-end;padding:18px 0 8px}
+header h1{margin:0;font-size:28px;font-weight:700;letter-spacing:-.4px}header p{margin:2px 0 0;color:var(--mut);font-size:14px}
+h2{font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--mut);margin:22px 4px 8px;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+.card{background:var(--card);border-radius:18px;padding:14px;margin:10px 0;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(60,50,30,.05)}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+.btn{background:var(--acc2);color:#2f6f5a;border-radius:12px;padding:10px 14px;font-weight:600;font-size:15px}
+.btn.pri{background:var(--acc);color:#fff}.btn.ghost{background:#f0ede6;color:var(--ink)}.btn.danger{background:#f8e5e3;color:var(--bad)}
+.btn.sm{padding:6px 11px;font-size:13px;border-radius:10px}
+.fab{width:44px;height:44px;border-radius:50%;background:var(--acc);color:#fff;font-size:26px;line-height:44px;text-align:center;box-shadow:0 4px 12px rgba(79,154,128,.35)}
+.item{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.item:first-of-type{border-top:0}
+.ico{width:42px;height:42px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px;flex:none}
+.item .mid{flex:1;min-width:0}.item b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.item small{color:var(--mut);font-size:13px}
+.check{width:40px;height:40px;border-radius:50%;border:2px solid #cfd8d3;flex:none;display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;transition:all .15s}
+.check.on{background:var(--acc);border-color:var(--acc)}.check.sk{background:#e9e6df;border-color:#e9e6df;color:var(--mut);font-size:14px}
+.skip{color:var(--mut);font-size:13px;padding:6px}
+.item.done b{color:var(--mut);text-decoration:line-through;text-decoration-color:#c8cfcb}
+.slot-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.slot-h b{font-size:17px}.slot-h small{color:var(--mut);font-size:13px;margin-left:6px}
+.banner{background:var(--warnbg);color:#7a4c17;border-radius:14px;padding:11px 14px;margin:10px 0;font-size:14px;display:flex;gap:8px;align-items:center;justify-content:space-between}
+.banner.info{background:var(--acc2);color:#2f6f5a}
+.ring{display:flex;align-items:center;gap:14px}.ring svg{flex:none}
+.stats3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.stats3 div{background:#faf8f4;border-radius:14px;padding:10px 4px}.stats3 b{font-size:22px;display:block}.stats3 small{color:var(--mut);font-size:12px}
+.heat{display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;gap:3px}
+.heat i{aspect-ratio:1;border-radius:4px;background:#ece9e2;display:block}
+.heatwrap{display:flex;gap:6px}.heatwrap .dl{display:grid;grid-template-rows:repeat(7,1fr);gap:3px;font-size:9px;color:var(--mut)}
+.legend{display:flex;gap:4px;align-items:center;font-size:11px;color:var(--mut);justify-content:flex-end;margin-top:8px}.legend i{width:11px;height:11px;border-radius:3px;display:inline-block}
+.bar{height:8px;border-radius:4px;background:#ece9e2;overflow:hidden;margin-top:6px}.bar i{display:block;height:100%;border-radius:4px;background:var(--acc)}
+.tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:8px;background:var(--warnbg);color:var(--warn);font-weight:600;margin-left:4px}
+.tag.s{background:#eef0f6;color:#5b6587}
+nav{position:fixed;left:0;right:0;bottom:0;background:rgba(246,244,239,.94);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:5}
+nav button{flex:1;padding:9px 0 11px;color:var(--mut);font-size:11px;font-weight:600}nav button span{display:block;font-size:20px;line-height:1.2}
+nav button.on{color:var(--acc)}
+.hide{display:none!important}
+.sheet-bg{position:fixed;inset:0;background:rgba(30,30,25,.35);z-index:10;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--bg);width:100%;max-width:540px;max-height:92vh;overflow:auto;border-radius:22px 22px 0 0;padding:16px 16px calc(20px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
+.sheet h3{margin:4px 0 12px;font-size:20px;display:flex;justify-content:space-between}
+label.f{display:block;margin:12px 0 4px;font-size:13px;color:var(--mut);font-weight:600}
+input,select,textarea{font:inherit;font-size:16px;width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--ink);-webkit-appearance:none;appearance:none}
+.row{display:flex;gap:8px}.row>*{flex:1}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:8px 12px;border-radius:20px;background:#fff;border:1px solid var(--line);font-size:14px}
+.chip.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.sw{width:34px;height:34px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px var(--line)}.sw.on{box-shadow:0 0 0 2px var(--ink)}
+.em{width:40px;height:40px;border-radius:12px;background:#fff;border:1px solid var(--line);font-size:20px}.em.on{border:2px solid var(--acc);background:var(--acc2)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top));background:#2b3531;color:#fff;border-radius:14px;padding:10px 10px 10px 16px;display:flex;gap:14px;align-items:center;z-index:20;font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.2);max-width:92%}
+.toast button{color:#9fe0c6;font-weight:700;padding:4px 8px}
+.empty{text-align:center;padding:28px 12px;color:var(--mut)}
+.muted{color:var(--mut);font-size:13px}
+.slotline{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid var(--line)}.slotline:first-child{border-top:0}
+.slotline input{width:120px}
+.sample-badge{font-size:11px;font-weight:700;background:#eef0f6;color:#5b6587;padding:4px 9px;border-radius:9px}
+</style></head><body>
+<div class="wrap">
+<section id="v-today">
+  <header><div><h1 id="hello">Today</h1><p id="todayDate"></p></div><button class="fab" data-add aria-label="Add supplement">+</button></header>
+  <div id="banners"></div>
+  <div id="todayList"></div>
+</section>
+<section id="v-stats" class="hide">
+  <header><div><h1>Progress</h1><p>Streaks and adherence</p></div></header>
+  <div id="statsBody"></div>
+</section>
+<section id="v-supply" class="hide">
+  <header><div><h1>Supply</h1><p>Pills on hand</p></div><button class="fab" data-add aria-label="Add supplement">+</button></header>
+  <div id="supplyBody"></div>
+</section>
+<section id="v-settings" class="hide">
+  <header><div><h1>Settings</h1><p>Reminders, backup, data</p></div></header>
+  <h2>Times of day</h2><div class="card" id="slotTimes"></div>
+  <h2>Reminders</h2>
+  <div class="card"><p class="muted" style="margin-top:0">iPhone web apps can't reliably send scheduled notifications without a push server, which this app deliberately doesn't use. So: add a repeating Calendar event for each time of day, and Calendar will alert you. In the app, overdue doses show as a banner.</p><div id="icsList"></div>
+  <p class="muted">Tip: tap a button, then <b>Add All</b> in the calendar sheet. If you change your schedule, delete the old event and add a new one.</p></div>
+  <h2>Backup</h2>
+  <div class="card"><div class="row"><button class="btn" id="exportBtn">Export JSON</button><label class="btn ghost" style="text-align:center">Import JSON<input type="file" id="importFile" accept="application/json,.json" hidden></label></div><p class="muted" id="backupMsg">Your data lives only on this device. Export a backup now and then.</p></div>
+  <h2>Data</h2>
+  <div class="card"><div class="row"><button class="btn ghost" id="sampleBtn2">Load sample</button><button class="btn danger" id="clearBtn">Erase everything</button></div>
+  <p class="muted">Install: in Safari tap Share → <b>Add to Home Screen</b>. It works offline after that.</p></div>
+</section>
+</div>
+<nav><button data-go="today" class="on"><span>☀︎</span>Today</button><button data-go="stats"><span>◔</span>Progress</button><button data-go="supply"><span>▤</span>Supply</button><button data-go="settings"><span>⚙︎</span>Settings</button></nav>
+<div id="sheet" class="sheet-bg hide"><div class="sheet" id="sheetBody"></div></div>
+<div id="toast" class="toast hide"><span id="toastMsg"></span><button id="toastUndo">Undo</button></div>
+<script>
+"use strict";
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const SLOTS=[["morning","Morning","🌅"],["lunch","Lunch","🥗"],["evening","Evening","🌆"],["bedtime","Bedtime","🌙"]];
+const SLOTNAME=Object.fromEntries(SLOTS.map(s=>[s[0],s[1]]));
+const COLORS=["#f6d77a","#a8d5c2","#f2b880","#b9c6f0","#e9a7b4","#c9b6e4","#d8d2c4"];
+const ICONS=["💊","🟡","🐟","☀️","🌿","💧","🍊","⚡","🦴","🧠","❤️","🫚"];
+const UNITS=["mg","mcg","IU","g","mL","capsule","tablet","softgel","gummy","drop","scoop"];
+const FORMS=["capsule","tablet","softgel","gummy","powder","liquid","chewable"];
+const DOW=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+// ---- dates (local) ----
+const pad=n=>String(n).padStart(2,"0");
+const ymd=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const parse=s=>{const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)};
+const addD=(s,n)=>{const d=parse(s);d.setDate(d.getDate()+n);return ymd(d)};
+const diffD=(a,b)=>Math.round((parse(b)-parse(a))/864e5);
+const today=()=>ymd(new Date());
+// ---- storage ----
+const KEY="supps.v1";
+let S=load();
+function blank(){return{supps:[],log:{},slotTimes:{morning:"08:00",lunch:"12:30",evening:"18:30",bedtime:"22:00"},sample:false}}
+function load(){try{const x=JSON.parse(localStorage.getItem(KEY));if(x&&Array.isArray(x.supps))return Object.assign(blank(),x)}catch(e){}return blank()}
+let saveWarned=false;
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){if(!saveWarned){saveWarned=true;toast("Couldn't save (private browsing?). Changes last until you close the app.")}}}
+const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4);
+// ---- schedule ----
+function isDue(p,date){ if(p.paused) return false; const st=p.schedule.start||p.created||date; if(date<st) return false;
+ const sc=p.schedule; if(sc.type==="weekdays") return (sc.days||[]).includes(parse(date).getDay());
+ if(sc.type==="interval") return diffD(st,date)%Math.max(1,sc.every||1)===0; return true; }
+function dosesOn(date){ const out=[]; for(const p of S.supps) if(isDue(p,date)) for(const t of p.times) out.push({p,slot:t,key:p.id+"|"+t}); return out; }
+const status=(date,key)=>{const l=S.log[date];return l&&l[key]?l[key].s:null};
+function perDay(p){ const n=p.times.length, sc=p.schedule; return sc.type==="weekdays"?n*(sc.days||[]).length/7:sc.type==="interval"?n/Math.max(1,sc.every||1):n; }
+function daysLeft(p){ if(p.stock==null||p.stock==="") return null; const r=perDay(p)*(p.perDose||1); return r>0?Math.floor(p.stock/r):null; }
+function schedText(p){ const sc=p.schedule; const w=sc.type==="weekdays"?((sc.days||[]).length===7?"Daily":(sc.days||[]).map(d=>DOW[d]).join(", ")):sc.type==="interval"?(sc.every==2?"Every other day":"Every "+sc.every+" days"):"Daily";
+ return w+" · "+p.times.map(t=>SLOTNAME[t]).join(", ")+(p.food==="with"?" · with food":p.food==="without"?" · empty stomach":""); }
+const doseText=p=>[p.dose,p.unit].filter(x=>x!==""&&x!=null).join(" ")+(p.unit===p.form&&(p.perDose||1)==1?"":p.perDose&&p.perDose!=1?` · ${p.perDose} ${p.form||"pills"}s`:p.form?` · 1 ${p.form}`:"");
+// ---- actions ----
+let undoFn=null,toastT=null;
+function toast(msg,undo){ $("#toastMsg").textContent=msg; undoFn=undo||null; $("#toastUndo").classList.toggle("hide",!undo); $("#toast").classList.remove("hide"); clearTimeout(toastT); toastT=setTimeout(()=>$("#toast").classList.add("hide"),undo?6000:3500); }
+$("#toastUndo").onclick=()=>{ if(undoFn){undoFn();undoFn=null} $("#toast").classList.add("hide"); };
+function setStatus(date,list,s){ // list of {p,key}; returns undo
+ const prev=list.map(({p,key})=>({p,key,old:S.log[date]&&S.log[date][key]?{...S.log[date][key]}:null,stock:p.stock}));
+ for(const {p,key} of list){ const l=S.log[date]||(S.log[date]={}); const was=l[key]&&l[key].s;
+   if(s==null){ delete l[key]; } else l[key]={s,t:Date.now()};
+   if(p.stock!=null&&p.stock!==""){ const pd=p.perDose||1; if(was==="taken"&&s!=="taken") p.stock=+p.stock+pd; if(was!=="taken"&&s==="taken") p.stock=Math.max(0,+p.stock-pd); } }
+ save(); render();
+ return ()=>{ for(const x of prev){ const l=S.log[date]||(S.log[date]={}); if(x.old) l[x.key]=x.old; else delete l[x.key]; x.p.stock=x.stock; } save(); render(); };
+}
+function checkLow(list){ const low=list.map(x=>x.p).filter((p,i,a)=>a.indexOf(p)===i).filter(p=>{const d=daysLeft(p);return d!=null&&d<=7}); return low.length?" · "+low.map(p=>p.name).join(", ")+" running low":""; }
+// ---- Today ----
+let VIEWDATE=null;
+function slotMins(slot){const [h,m]=(S.slotTimes[slot]||"08:00").split(":").map(Number);return h*60+m}
+function render(){ renderToday(); if(!$("#v-stats").classList.contains("hide")) renderStats(); if(!$("#v-supply").classList.contains("hide")) renderSupply(); }
+function renderToday(){ const date=VIEWDATE||today(); const isToday=date===today();
+ const d=parse(date); $("#todayDate").textContent=d.toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
+ const h=new Date().getHours(); $("#hello").textContent=isToday?(h<12?"Good morning":h<18?"Good afternoon":"Good evening"):"Past day";
+ const doses=dosesOn(date); const now=new Date(), nowM=now.getHours()*60+now.getMinutes();
+ let ban="";
+ if(S.sample) ban+=`<div class="banner info"><span>You're looking at <b>sample supplements</b>.</span><button class="btn sm" id="clearSample">Clear sample</button></div>`;
+ if(!isToday) ban+=`<div class="banner info"><span>Editing ${esc(d.toLocaleDateString())}</span><button class="btn sm" id="backToday">Back to today</button></div>`;
+ if(isToday){ for(const [k,n] of SLOTS){ const pend=doses.filter(x=>x.slot===k&&!status(date,x.key)); if(pend.length&&nowM>slotMins(k)+30) ban+=`<div class="banner"><span>⏰ ${n} is overdue: ${pend.map(x=>esc(x.p.name)).join(", ")}</span></div>`; } }
+ const low=S.supps.filter(p=>!p.paused&&daysLeft(p)!=null&&daysLeft(p)<=7); if(low.length) ban+=`<div class="banner"><span>📦 Running low: ${low.map(p=>esc(p.name)+" ("+daysLeft(p)+"d)").join(", ")}</span><button class="btn sm" data-go="supply">Supply</button></div>`;
+ $("#banners").innerHTML=ban;
+ if(!S.supps.length){ $("#todayList").innerHTML=`<div class="card empty"><div style="font-size:40px">💊</div><p><b>No supplements yet</b><br>Add what you take, or try the sample list to look around.</p><p><button class="btn pri" data-add>Add a supplement</button></p><p><button class="btn" id="sampleBtn">Try sample</button></p></div>`; return; }
+ const total=doses.length, taken=doses.filter(x=>status(date,x.key)==="taken").length, skipped=doses.filter(x=>status(date,x.key)==="skipped").length;
+ const pct=total?taken/total:0, C=2*Math.PI*26;
+ let html=`<div class="card ring"><svg width="66" height="66" viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="#ece9e2" stroke-width="7"/><circle cx="32" cy="32" r="26" fill="none" stroke="var(--acc)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${C*pct} ${C}" transform="rotate(-90 32 32)"/><text x="32" y="37" text-anchor="middle" font-size="15" font-weight="700" fill="#23302b">${Math.round(pct*100)}%</text></svg><div><b>${total?taken+" of "+total+" taken":"Nothing scheduled"}</b><br><span class="muted">${skipped?skipped+" skipped · ":""}${overallStreak()} day streak 🔥</span></div></div>`;
+ if(!total) html+=`<div class="card empty">Rest day, nothing is scheduled.</div>`;
+ for(const [k,n,ic] of SLOTS){ const g=doses.filter(x=>x.slot===k); if(!g.length) continue; const pending=g.filter(x=>!status(date,x.key));
+  html+=`<div class="card" data-slot="${k}"><div class="slot-h"><div><b>${ic} ${n}</b><small>${esc(S.slotTimes[k])}</small></div>${pending.length?`<button class="btn sm" data-takeall="${k}">Take all (${pending.length})</button>`:`<span class="muted">✓ Done</span>`}</div>`;
+  for(const x of g){ const st=status(date,x.key), p=x.p;
+   html+=`<div class="item ${st?"done":""}"><div class="ico" style="background:${p.color}">${esc(p.icon)}</div><div class="mid" data-edit="${p.id}"><b>${esc(p.name)}</b><small>${esc(doseText(p))}${p.food==="with"?" · 🍽 with food":p.food==="without"?" · empty stomach":""}${st==="skipped"?" · skipped":""}</small></div>${st?"":`<button class="skip" data-skip="${x.key}">Skip</button>`}<button class="check ${st==="taken"?"on":st==="skipped"?"sk":""}" data-tap="${x.key}" aria-label="Mark ${esc(p.name)} taken">${st==="taken"?"✓":st==="skipped"?"–":""}</button></div>`; }
+  html+=`</div>`; }
+ $("#todayList").innerHTML=html; }
+document.addEventListener("click",e=>{ const t=e.target.closest("button,[data-edit],[data-go]"); if(!t) return; const date=VIEWDATE||today();
+ if(t.dataset.go){ go(t.dataset.go); return; }
+ if(t.hasAttribute("data-add")){ openEditor(null); return; }
+ if(t.dataset.edit){ openEditor(S.supps.find(p=>p.id===t.dataset.edit)); return; }
+ if(t.dataset.tap){ const x=dosesOn(date).find(x=>x.key===t.dataset.tap); if(!x) return; const st=status(date,x.key);
+   if(st){ const u=setStatus(date,[x],null); toast((st==="taken"?"Unmarked ":"Unskipped ")+x.p.name,u); }
+   else { const u=setStatus(date,[x],"taken"); toast("✓ "+x.p.name+" taken"+checkLow([x]),u); } return; }
+ if(t.dataset.skip){ const x=dosesOn(date).find(x=>x.key===t.dataset.skip); if(!x) return; const u=setStatus(date,[x],"skipped"); toast("Skipped "+x.p.name,u); return; }
+ if(t.dataset.takeall){ const g=dosesOn(date).filter(x=>x.slot===t.dataset.takeall&&!status(date,x.key)); const u=setStatus(date,g,"taken"); toast(`✓ ${SLOTNAME[t.dataset.takeall]}: ${g.length} taken`+checkLow(g),u); return; }
+ if(t.id==="sampleBtn"||t.id==="sampleBtn2"){ loadSample(); return; }
+ if(t.id==="clearSample"){ S=blank(); save(); render(); toast("Sample cleared"); return; }
+ if(t.id==="backToday"){ VIEWDATE=null; renderToday(); return; }
+ if(t.dataset.day){ VIEWDATE=t.dataset.day===today()?null:t.dataset.day; go("today"); return; }
+ if(t.dataset.restock){ const p=S.supps.find(p=>p.id===t.dataset.restock); const inp=$(`#rs-${p.id}`); const n=Math.round(+inp.value); if(!(n>0)){inp.focus();return} const old=p.stock; p.stock=(+p.stock||0)+n; save(); renderSupply(); renderToday(); toast(`Restocked ${p.name}: +${n}`,()=>{p.stock=old;save();renderSupply();renderToday()}); return; }
+});
+// ---- streaks & stats ----
+function dayState(date){ const d=dosesOn(date); if(!d.length) return null; const tk=d.filter(x=>status(date,x.key)==="taken").length; return {n:d.length,tk}; }
+function overallStreak(){ let s=0, d=today(); const st0=dayState(d); if(!(st0&&st0.tk===st0.n)) d=addD(d,-1); for(let i=0;i<1000;i++,d=addD(d,-1)){ const st=dayState(d); if(st==null){ if(!S.supps.some(p=>(p.schedule.start||p.created)<=d)) break; continue; } if(st.tk===st.n) s++; else break; } return s; }
+function suppStreak(p){ let s=0,d=today(); const ok=d=>p.times.every(t=>status(d,p.id+"|"+t)==="taken"); if(!(isDue(p,d)&&ok(d))) d=addD(d,-1);
+ const st=p.schedule.start||p.created; for(let i=0;i<1000&&d>=st;i++,d=addD(d,-1)){ if(!isDue(p,d)) continue; if(ok(d)) s++; else break; } return s; }
+function best(p){ let b=0,c=0; const st=p.schedule.start||p.created; for(let d=st;d<=today();d=addD(d,1)){ if(!isDue(p,d)) continue; if(p.times.every(t=>status(d,p.id+"|"+t)==="taken")){c++;b=Math.max(b,c)} else if(d!==today()) c=0; } return b; }
+function adherence(days,p){ let due=0,tk=0; const t=today(); for(let i=0;i<days;i++){ const d=addD(t,-i); for(const x of dosesOn(d)){ if(p&&x.p!==p) continue; const st=status(d,x.key); if(d===t&&!st) continue; due++; if(st==="taken") tk++; } } return due?Math.round(tk/due*100):null; }
+function renderStats(){ if(!S.supps.length){ $("#statsBody").innerHTML=`<div class="card empty">Add supplements to see your progress.</div>`; return; }
+ const t=today(); const weeks=13; const end=parse(t); const start=addD(t,-(weeks*7-1)-end.getDay()+6-6); // align: columns are weeks starting Sunday
+ const first=addD(t,-((weeks-1)*7+end.getDay())); let cells="";
+ for(let d=first;d<=addD(t,6-end.getDay());d=addD(d,1)){ const st=d<=t?dayState(d):null; let c="#ece9e2",title=d;
+  if(d>t) c="transparent"; else if(st){ const f=st.tk/st.n; c=f===1?"#4f9a80":f>=.66?"#86c0a9":f>0?"#c5e0d4":"#efd9c3"; title+=` · ${st.tk}/${st.n}`; }
+  cells+=`<i style="background:${c}" title="${title}" ${d<=t?`data-day="${d}" role="button"`:""}></i>`; }
+ const a7=adherence(7), a30=adherence(30);
+ let html=`<div class="card"><div class="stats3"><div><b>${overallStreak()}🔥</b><small>day streak</small></div><div><b>${a7==null?"–":a7+"%"}</b><small>7-day adherence</small></div><div><b>${a30==null?"–":a30+"%"}</b><small>30-day adherence</small></div></div></div>
+ <h2>Last 13 weeks</h2><div class="card"><div class="heatwrap"><div class="dl">${DOW.map((d,i)=>`<span>${i%2?d[0]:""}</span>`).join("")}</div><div class="heat" style="flex:1">${cells}</div></div>
+ <div class="legend">Less <i style="background:#efd9c3"></i><i style="background:#c5e0d4"></i><i style="background:#86c0a9"></i><i style="background:#4f9a80"></i> All taken</div><p class="muted" style="margin:6px 0 0">Tap a day to view or fix it.</p></div><h2>By supplement</h2><div class="card">`;
+ for(const p of S.supps){ const a=adherence(30,p); html+=`<div class="item"><div class="ico" style="background:${p.color}">${esc(p.icon)}</div><div class="mid"><b>${esc(p.name)}</b><small>🔥 ${suppStreak(p)} streak · best ${best(p)}</small><div class="bar"><i style="width:${a||0}%"></i></div></div><div style="text-align:right;min-width:48px"><b>${a==null?"–":a+"%"}</b><small class="muted">30d</small></div></div>`; }
+ $("#statsBody").innerHTML=html+`</div>`;
+ $$(".heat i[data-day]").forEach(i=>i.onclick=()=>{VIEWDATE=i.dataset.day===today()?null:i.dataset.day;go("today")}); }
+function renderSupply(){ if(!S.supps.length){ $("#supplyBody").innerHTML=`<div class="card empty">No supplements yet.</div>`; return; }
+ const list=[...S.supps].sort((a,b)=>(daysLeft(a)??1e9)-(daysLeft(b)??1e9)); let html="";
+ for(const p of list){ const dl=daysLeft(p); const tracked=p.stock!=null&&p.stock!=="";
+  html+=`<div class="card"><div class="item" style="border:0;padding:0"><div class="ico" style="background:${p.color}">${esc(p.icon)}</div><div class="mid" data-edit="${p.id}"><b>${esc(p.name)} ${dl!=null&&dl<=7?`<span class="tag">${dl<=0?"Out":"Running low"}</span>`:""}${p.sample?`<span class="tag s">sample</span>`:""}</b><small>${esc(schedText(p))}</small></div></div>`;
+  if(tracked){ const pct=Math.min(100,dl==null?0:dl/60*100);
+   html+=`<div style="display:flex;justify-content:space-between;margin-top:10px"><span><b>${p.stock}</b> <span class="muted">${esc(p.form||"pill")}s left · ${p.perDose||1} per dose</span></span><span class="${dl<=7?"":"muted"}" style="${dl<=7?"color:var(--warn);font-weight:600":""}">${dl==null?"":"≈ "+dl+" days"}</span></div><div class="bar"><i style="width:${pct}%;background:${dl<=7?"var(--warn)":"var(--acc)"}"></i></div>
+   <div class="row" style="margin-top:10px;align-items:center"><input id="rs-${p.id}" type="number" inputmode="numeric" min="1" placeholder="Bottle size" value="${p.bottle||""}"><button class="btn" data-restock="${p.id}">Restocked</button></div>`; }
+  else html+=`<p class="muted" style="margin:8px 0 0">Supply not tracked. <button class="btn sm ghost" data-edit="${p.id}">Set pills on hand</button></p>`;
+  html+=`</div>`; }
+ $("#supplyBody").innerHTML=html; }
+// ---- editor ----
+function openEditor(p){ const isNew=!p; p=p?JSON.parse(JSON.stringify(p)):{id:uid(),name:"",dose:"",unit:"mg",form:"capsule",color:COLORS[0],icon:"💊",schedule:{type:"daily",days:[1,2,3,4,5],every:2,start:today()},times:["morning"],food:"any",stock:"",perDose:1,bottle:"",notes:"",created:today()};
+ const sc=p.schedule; sc.days=sc.days||[1,2,3,4,5]; sc.every=sc.every||2; sc.start=sc.start||p.created||today();
+ const chip=(on,attr,label)=>`<button type="button" class="chip ${on?"on":""}" ${attr}>${label}</button>`;
+ $("#sheetBody").innerHTML=`<h3>${isNew?"Add supplement":"Edit supplement"}<button class="btn sm ghost" id="edCancel">Cancel</button></h3>
+ <label class="f">Name</label><input id="edName" value="${esc(p.name)}" placeholder="e.g. Vitamin D3" autocomplete="off">
+ <div class="row"><div><label class="f">Dose</label><input id="edDose" inputmode="decimal" value="${esc(p.dose)}" placeholder="2000"></div><div><label class="f">Unit</label><select id="edUnit">${UNITS.map(u=>`<option ${u===p.unit?"selected":""}>${u}</option>`).join("")}</select></div></div>
+ <label class="f">Form</label><div class="chips" id="edForm">${FORMS.map(f=>chip(f===p.form,`data-v="${f}"`,f)).join("")}</div>
+ <label class="f">Color & icon</label><div class="chips" id="edColor">${COLORS.map(c=>`<button type="button" class="sw ${c===p.color?"on":""}" data-v="${c}" style="background:${c}" aria-label="color"></button>`).join("")}</div>
+ <div class="chips" id="edIcon" style="margin-top:8px">${ICONS.map(c=>`<button type="button" class="em ${c===p.icon?"on":""}" data-v="${c}">${c}</button>`).join("")}</div>
+ <label class="f">How often</label><div class="chips" id="edType">${chip(sc.type==="daily",'data-v="daily"',"Every day")}${chip(sc.type==="weekdays",'data-v="weekdays"',"Specific days")}${chip(sc.type==="interval",'data-v="interval"',"Every N days")}</div>
+ <div id="edDaysWrap" style="margin-top:8px"><div class="chips" id="edDays">${DOW.map((d,i)=>chip(sc.days.includes(i),`data-v="${i}"`,d)).join("")}</div></div>
+ <div id="edEveryWrap" class="row" style="margin-top:8px;align-items:center"><span>Every</span><input id="edEvery" type="number" min="2" max="60" value="${sc.every}"><span>days, from</span><input id="edStart" type="date" value="${sc.start}"></div>
+ <label class="f">Time of day (pick one or more)</label><div class="chips" id="edTimes">${SLOTS.map(([k,n,ic])=>chip(p.times.includes(k),`data-v="${k}"`,ic+" "+n)).join("")}</div>
+ <label class="f">Food</label><div class="chips" id="edFood">${chip(p.food==="with",'data-v="with"',"With food")}${chip(p.food==="without",'data-v="without"',"Empty stomach")}${chip(p.food==="any",'data-v="any"',"Doesn't matter")}</div>
+ <div class="row"><div><label class="f">Pills on hand</label><input id="edStock" type="number" inputmode="numeric" min="0" value="${p.stock??""}" placeholder="optional"></div><div><label class="f">Pills per dose</label><input id="edPer" type="number" inputmode="numeric" min="1" value="${p.perDose||1}"></div><div><label class="f">Bottle size</label><input id="edBottle" type="number" inputmode="numeric" min="1" value="${p.bottle||""}" placeholder="for restock"></div></div>
+ <label class="f">Notes</label><input id="edNotes" value="${esc(p.notes)}" placeholder="optional">
+ <p id="edErr" style="color:var(--bad);font-size:14px;min-height:1em"></p>
+ <button class="btn pri" id="edSave" style="width:100%;padding:14px">${isNew?"Add":"Save"}</button>
+ ${isNew?"":`<div class="row" style="margin-top:10px"><button class="btn ghost" id="edPause">${p.paused?"Resume":"Pause"}</button><button class="btn danger" id="edDel">Delete</button></div>`}`;
+ const single=(id,key,set)=>$$(`#${id} [data-v]`).forEach(b=>b.onclick=()=>{ $$(`#${id} [data-v]`).forEach(x=>x.classList.remove("on")); b.classList.add("on"); set(b.dataset.v); upd(); });
+ const multi=(id,arr,num)=>$$(`#${id} [data-v]`).forEach(b=>b.onclick=()=>{ const v=num?+b.dataset.v:b.dataset.v; const i=arr.indexOf(v); i>=0?arr.splice(i,1):arr.push(v); b.classList.toggle("on",i<0); });
+ single("edForm",0,v=>p.form=v); single("edColor",0,v=>p.color=v); single("edIcon",0,v=>p.icon=v); single("edType",0,v=>sc.type=v); single("edFood",0,v=>p.food=v);
+ multi("edDays",sc.days,true); multi("edTimes",p.times,false);
+ function upd(){ $("#edDaysWrap").classList.toggle("hide",sc.type!=="weekdays"); $("#edEveryWrap").classList.toggle("hide",sc.type!=="interval"); }
+ upd(); $("#sheet").classList.remove("hide"); document.body.style.overflow="hidden";
+ $("#edCancel").onclick=closeSheet;
+ $("#edSave").onclick=()=>{ p.name=$("#edName").value.trim(); p.dose=$("#edDose").value.trim(); p.unit=$("#edUnit").value; p.notes=$("#edNotes").value.trim();
+  const st=$("#edStock").value; p.stock=st===""?"":Math.max(0,Math.round(+st)); p.perDose=Math.max(1,Math.round(+$("#edPer").value||1)); p.bottle=$("#edBottle").value?Math.round(+$("#edBottle").value):"";
+  sc.every=Math.max(2,Math.round(+$("#edEvery").value||2)); sc.start=$("#edStart").value||today();
+  if(!p.name) return void($("#edErr").textContent="Give it a name.");
+  if(!p.times.length) return void($("#edErr").textContent="Pick at least one time of day.");
+  if(sc.type==="weekdays"&&!sc.days.length) return void($("#edErr").textContent="Pick at least one day.");
+  p.times.sort((a,b)=>SLOTS.findIndex(s=>s[0]===a)-SLOTS.findIndex(s=>s[0]===b)); sc.days.sort();
+  if(sc.type!=="interval"&&isNew) sc.start=today();
+  const i=S.supps.findIndex(x=>x.id===p.id); if(i>=0) S.supps[i]=p; else S.supps.push(p);
+  save(); closeSheet(); render(); renderSettings(); toast(isNew?`Added ${p.name}`:`Saved ${p.name}`); };
+ if(!isNew){ $("#edPause").onclick=()=>{ const o=S.supps.find(x=>x.id===p.id); o.paused=!o.paused; save(); closeSheet(); render(); toast(o.paused?`Paused ${o.name}`:`Resumed ${o.name}`); };
+  let arm=false; $("#edDel").onclick=e=>{ if(!arm){arm=true;e.target.textContent="Tap again to delete";setTimeout(()=>{arm=false;e.target.textContent="Delete"},3500);return}
+   const i=S.supps.findIndex(x=>x.id===p.id); const old=S.supps[i]; S.supps.splice(i,1); save(); closeSheet(); render(); renderSettings(); toast(`Deleted ${old.name}`,()=>{S.supps.splice(i,0,old);save();render();renderSettings()}); }; }
+}
+function closeSheet(){ $("#sheet").classList.add("hide"); document.body.style.overflow=""; }
+$("#sheet").addEventListener("click",e=>{ if(e.target.id==="sheet") closeSheet(); });
+// ---- settings, ics, backup ----
+function renderSettings(){
+ $("#slotTimes").innerHTML=SLOTS.map(([k,n,ic])=>`<div class="slotline"><span>${ic} ${n}</span><input type="time" data-slottime="${k}" value="${S.slotTimes[k]}"></div>`).join("");
+ $$("[data-slottime]").forEach(i=>i.onchange=()=>{ if(i.value){S.slotTimes[i.dataset.slottime]=i.value;save();render();renderSettings()} });
+ $("#icsList").innerHTML=SLOTS.map(([k,n,ic])=>{ const c=S.supps.filter(p=>!p.paused&&p.times.includes(k)); return `<div class="slotline"><span>${ic} ${n} <span class="muted">${S.slotTimes[k]} · ${c.length} item${c.length==1?"":"s"}</span></span><button class="btn sm" data-ics="${k}" ${c.length?"":"disabled style='opacity:.4'"}>Add to Calendar</button></div>`; }).join("");
+ $$("[data-ics]").forEach(b=>b.onclick=()=>downloadICS(b.dataset.ics));
+}
+function icsEsc(s){return String(s).replace(/\\/g,"\\\\").replace(/;/g,"\\;").replace(/,/g,"\\,").replace(/\n/g,"\\n")}
+function buildICS(slot){ const items=S.supps.filter(p=>!p.paused&&p.times.includes(slot)); const [h,m]=S.slotTimes[slot].split(":");
+ const d=today().replace(/-/g,""); const stamp=new Date().toISOString().replace(/[-:]/g,"").replace(/\.\d+/,"");
+ const allDaily=items.every(p=>p.schedule.type==="daily"); const desc=items.map(p=>`• ${p.name} ${doseText(p)}${p.food==="with"?" (with food)":""} – ${schedText(p).split(" · ")[0]}`).join("\n")+(allDaily?"":"\n(Some items aren't daily – check the app for today's list.)");
+ return ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Daily Supplements//EN","CALSCALE:GREGORIAN","BEGIN:VEVENT",`UID:supps-${slot}-${Date.now()}@local`,`DTSTAMP:${stamp}`,`DTSTART:${d}T${h}${m}00`,`DURATION:PT10M`,"RRULE:FREQ=DAILY",
+  `SUMMARY:${icsEsc("💊 "+SLOTNAME[slot]+" supplements")}`,`DESCRIPTION:${icsEsc(desc)}`,"BEGIN:VALARM","ACTION:DISPLAY",`DESCRIPTION:${icsEsc(SLOTNAME[slot]+" supplements")}`,"TRIGGER:PT0M","END:VALARM","END:VEVENT","END:VCALENDAR"].join("\r\n")+"\r\n"; }
+function download(name,text,type){ const blob=new Blob([text],{type}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000); }
+function downloadICS(slot){ download(`supplements-${slot}.ics`,buildICS(slot),"text/calendar"); toast("Calendar file ready, tap Add All"); }
+$("#exportBtn").onclick=()=>{ download(`supplements-backup-${today()}.json`,JSON.stringify({app:"daily-supplements",version:1,exported:new Date().toISOString(),data:S},null,2),"application/json"); $("#backupMsg").textContent="Backup exported "+new Date().toLocaleString(); };
+$("#importFile").onchange=async e=>{ const f=e.target.files[0]; e.target.value=""; if(!f) return; try{ const j=JSON.parse(await f.text()); const d=j.data||j; if(!Array.isArray(d.supps)||typeof d.log!=="object") throw new Error("not a supplements backup"); S=Object.assign(blank(),d); save(); render(); renderSettings(); $("#backupMsg").textContent=`Imported ${S.supps.length} supplements.`; toast("Backup restored"); }catch(err){ $("#backupMsg").textContent="Import failed: "+err.message; } };
+let clrArm=false; $("#clearBtn").onclick=e=>{ if(!clrArm){clrArm=true;e.target.textContent="Tap again to erase";setTimeout(()=>{clrArm=false;e.target.textContent="Erase everything"},3500);return} clrArm=false;e.target.textContent="Erase everything"; S=blank(); save(); render(); renderSettings(); toast("All data erased"); };
+// ---- sample ----
+function loadSample(){ const t=today(), st=addD(t,-75);
+ const mk=(name,dose,unit,form,color,icon,type,times,food,stock,per,bottle,extra={})=>({id:uid(),name,dose,unit,form,color,icon,schedule:Object.assign({type,days:[1,2,3,4,5],every:2,start:st},extra),times,food,stock,perDose:per,bottle,notes:"Sample",created:st,sample:true});
+ S=blank(); S.sample=true;
+ S.supps=[mk("Vitamin D3","2000","IU","softgel","#f6d77a","☀️","daily",["morning"],"with",54,1,90),
+  mk("Omega-3","1000","mg","softgel","#a8d5c2","🐟","daily",["morning","evening"],"with",9,1,120),
+  mk("Multivitamin","1","tablet","tablet","#f2b880","🍊","weekdays",["lunch"],"with",40,1,60,{days:[1,2,3,4,5]}),
+  mk("Magnesium glycinate","200","mg","capsule","#c9b6e4","🌙","daily",["bedtime"],"any",66,2,120),
+  mk("Vitamin B12","1000","mcg","tablet","#e9a7b4","⚡","interval",["morning"],"without",20,1,60,{every:3})];
+ // history with ~88% adherence, a few rough patches
+ let seed=42; const rnd=()=>((seed=seed*16807%2147483647)/2147483647);
+ for(let d=st;d<t;d=addD(d,1)){ const rough=diffD(st,d)%23<2; for(const x of dosesOn(d)){ const r=rnd(); const s=r<(rough?.45:.93)?"taken":r<(rough?.6:.97)?"skipped":null; if(s)(S.log[d]||(S.log[d]={}))[x.key]={s,t:0}; } }
+ // keep the last week clean so there's a streak
+ for(let i=1;i<=6;i++){ const d=addD(t,-i); for(const x of dosesOn(d)) (S.log[d]||(S.log[d]={}))[x.key]={s:"taken",t:0}; }
+ save(); VIEWDATE=null; go("today"); renderSettings(); toast("Sample supplements loaded"); }
+// ---- nav ----
+function go(v){ ["today","stats","supply","settings"].forEach(k=>$("#v-"+k).classList.toggle("hide",k!==v)); $$("nav button").forEach(b=>b.classList.toggle("on",b.dataset.go===v)); window.scrollTo(0,0);
+ if(v==="today") renderToday(); if(v==="stats") renderStats(); if(v==="supply") renderSupply(); if(v==="settings") renderSettings(); }
+// refresh at slot boundaries / day change
+let lastDay=today(); setInterval(()=>{ if(today()!==lastDay){lastDay=today();VIEWDATE=null} if(!$("#v-today").classList.contains("hide")&&$("#sheet").classList.contains("hide")) renderToday(); },60000);
+document.addEventListener("visibilitychange",()=>{ if(!document.hidden){ S=load(); render(); } });
+renderToday(); renderSettings();
+if("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script></body></html>
