@@ -70,10 +70,12 @@ input,select,textarea{font:inherit;font-size:16px;width:100%;padding:11px 12px;b
 .slotline{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid var(--line)}.slotline:first-child{border-top:0}
 .slotline input{width:120px}
 .sample-badge{font-size:11px;font-weight:700;background:#eef0f6;color:#5b6587;padding:4px 9px;border-radius:9px}
+.daynav{display:flex;align-items:center;gap:8px;margin-top:4px;color:var(--mut)}.daynav button{border:0;background:#ece9e2;border-radius:50%;width:30px;height:30px;font-size:20px;line-height:1;color:#23302b;padding:0;cursor:pointer}
+.future .skip,.future [data-tap],.future [data-takeall]{display:none}
 </style></head><body>
 <div class="wrap">
 <section id="v-today">
-  <header><div><h1 id="hello">Today</h1><p id="todayDate"></p></div><button class="fab" data-add aria-label="Add supplement">+</button></header>
+  <header><div><h1 id="hello">Today</h1><div class="daynav"><button type="button" id="dayPrev" aria-label="Previous day">‹</button><span id="todayDate"></span><button type="button" id="dayNext" aria-label="Next day">›</button></div></div><button class="fab" data-add aria-label="Add supplement">+</button></header>
   <div id="banners"></div>
   <div id="todayList"></div>
 </section>
@@ -160,18 +162,18 @@ function slotMins(slot){const [h,m]=(S.slotTimes[slot]||"08:00").split(":").map(
 function render(){ renderToday(); if(!$("#v-stats").classList.contains("hide")) renderStats(); if(!$("#v-supply").classList.contains("hide")) renderSupply(); }
 function renderToday(){ const date=VIEWDATE||today(); const isToday=date===today();
  const d=parse(date); $("#todayDate").textContent=d.toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
- const h=new Date().getHours(); $("#hello").textContent=isToday?(h<12?"Good morning":h<18?"Good afternoon":"Good evening"):"Past day";
+ const h=new Date().getHours(); const fut=date>today(); $("#hello").textContent=isToday?(h<12?"Good morning":h<18?"Good afternoon":"Good evening"):date===addD(today(),1)?"Tomorrow":date===addD(today(),-1)?"Yesterday":fut?"Coming up":"Past day"; $("#todayList").classList.toggle("future",fut);
  const doses=dosesOn(date); const now=new Date(), nowM=now.getHours()*60+now.getMinutes();
  let ban="";
  if(S.sample) ban+=`<div class="banner info"><span>You're looking at <b>sample supplements</b>.</span><button class="btn sm" id="clearSample">Clear sample</button></div>`;
- if(!isToday) ban+=`<div class="banner info"><span>Editing ${esc(d.toLocaleDateString())}</span><button class="btn sm" id="backToday">Back to today</button></div>`;
+ if(!isToday) ban+=`<div class="banner info"><span>${fut?"Preview of "+esc(d.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"}))+" · log it on the day":"Editing "+esc(d.toLocaleDateString())}</span><button class="btn sm" id="backToday">Back to today</button></div>`;
  if(isToday){ for(const [k,n] of SLOTS){ const pend=doses.filter(x=>x.slot===k&&!status(date,x.key)); if(pend.length&&nowM>slotMins(k)+30) ban+=`<div class="banner"><span>⏰ ${n} is overdue: ${pend.map(x=>esc(x.p.name)).join(", ")}</span></div>`; } }
  const low=S.supps.filter(p=>active(p)&&daysLeft(p)!=null&&daysLeft(p)<=7); if(low.length) ban+=`<div class="banner"><span>📦 Running low: ${low.map(p=>esc(p.name)+" ("+daysLeft(p)+"d)").join(", ")}</span><button class="btn sm" data-go="supply">Supply</button></div>`;
  $("#banners").innerHTML=ban;
  if(!S.supps.length){ $("#todayList").innerHTML=`<div class="card empty"><div style="font-size:40px">💊</div><p><b>No supplements yet</b><br>Add what you take, or try the sample list to look around.</p><p><button class="btn pri" data-add>Add a supplement</button></p><p><button class="btn" id="sampleBtn">Try sample</button></p></div>`; return; }
  const total=doses.length, taken=doses.filter(x=>status(date,x.key)==="taken").length, skipped=doses.filter(x=>status(date,x.key)==="skipped").length;
  const pct=total?taken/total:0, C=2*Math.PI*26;
- let html=`<div class="card ring"><svg width="66" height="66" viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="#ece9e2" stroke-width="7"/><circle cx="32" cy="32" r="26" fill="none" stroke="var(--acc)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${C*pct} ${C}" transform="rotate(-90 32 32)"/><text x="32" y="37" text-anchor="middle" font-size="15" font-weight="700" fill="#23302b">${Math.round(pct*100)}%</text></svg><div><b>${total?taken+" of "+total+" taken":"Nothing scheduled"}</b><br><span class="muted">${skipped?skipped+" skipped · ":""}${overallStreak()} day streak 🔥</span></div></div>`;
+ let html=`<div class="card ring"><svg width="66" height="66" viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="#ece9e2" stroke-width="7"/><circle cx="32" cy="32" r="26" fill="none" stroke="var(--acc)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${C*pct} ${C}" transform="rotate(-90 32 32)"/><text x="32" y="37" text-anchor="middle" font-size="15" font-weight="700" fill="#23302b">${Math.round(pct*100)}%</text></svg><div><b>${total?(fut?total+" dose"+(total==1?"":"s")+" scheduled":taken+" of "+total+" taken"):"Nothing scheduled"}</b><br><span class="muted">${skipped?skipped+" skipped · ":""}${overallStreak()} day streak 🔥</span></div></div>`;
  if(!total) html+=`<div class="card empty">Rest day, nothing is scheduled.</div>`;
  for(const [k,n,ic] of SLOTS){ const g=doses.filter(x=>x.slot===k); if(!g.length) continue; const pending=g.filter(x=>!status(date,x.key));
   html+=`<div class="card" data-slot="${k}"><div class="slot-h"><div><b>${ic} ${n}</b><small>${esc(S.slotTimes[k])}</small></div>${pending.length?`<button class="btn sm" data-takeall="${k}">Take all (${pending.length})</button>`:`<span class="muted">✓ Done</span>`}</div>`;
@@ -191,6 +193,8 @@ document.addEventListener("click",e=>{ const t=e.target.closest("button,[data-ed
  if(t.id==="sampleBtn"||t.id==="sampleBtn2"){ loadSample(); return; }
  if(t.id==="clearSample"){ S=blank(); save(); render(); toast("Sample cleared"); return; }
  if(t.id==="backToday"){ VIEWDATE=null; renderToday(); return; }
+ if(t.id==="dayPrev"||t.id==="dayNext"){ const nd=addD(date,t.id==="dayNext"?1:-1); VIEWDATE=nd===today()?null:nd; renderToday(); return; }
+ if(date>today()&&(t.dataset.tap||t.dataset.skip||t.dataset.takeall)) return;
  if(t.dataset.day){ VIEWDATE=t.dataset.day===today()?null:t.dataset.day; go("today"); return; }
  if(t.dataset.restock){ const p=S.supps.find(p=>p.id===t.dataset.restock); const inp=$(`#rs-${p.id}`); const n=Math.round(+inp.value); if(!(n>0)){inp.focus();return} const old=p.stock; p.stock=(+p.stock||0)+n; save(); renderSupply(); renderToday(); toast(`Restocked ${p.name}: +${n}`,()=>{p.stock=old;save();renderSupply();renderToday()}); return; }
 });
