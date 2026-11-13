@@ -71,6 +71,19 @@ input,select,textarea{font:inherit;font-size:16px;width:100%;padding:11px 12px;b
 .slotline input{width:120px}
 .sample-badge{font-size:11px;font-weight:700;background:#eef0f6;color:#5b6587;padding:4px 9px;border-radius:9px}
 .daynav{display:flex;align-items:center;gap:8px;margin-top:4px;color:var(--mut)}.daynav button{border:0;background:#ece9e2;border-radius:50%;width:30px;height:30px;font-size:20px;line-height:1;color:#23302b;padding:0;cursor:pointer}
+
+/* compact layout */
+header{padding:8px 0 2px}header h1{font-size:24px}
+.card{padding:10px 12px;margin:8px 0;border-radius:16px}
+.item{gap:10px;padding:6px 0}
+.ico{width:32px;height:32px;border-radius:10px;font-size:17px}
+.item b{font-size:15px}.item small{font-size:12px}
+.slot-h{margin-bottom:2px}.slot-h b{font-size:15px}
+.banner{padding:7px 12px;margin:6px 0;font-size:13px;border-radius:12px}
+.ring{gap:12px}.ring svg{width:46px;height:46px}
+.check{width:32px;height:32px;font-size:16px}.skip{padding:4px}
+.col .item{display:none}.col .slot-h{margin:0;cursor:pointer}.col .slot-h b{color:var(--mut)}
+.slot-h[data-toggle]{cursor:pointer}
 .future .skip,.future [data-tap],.future [data-takeall]{display:none}
 </style></head><body>
 <div class="wrap">
@@ -142,7 +155,10 @@ function perDay(p){ const n=p.times.length, sc=p.schedule; return sc.type==="wee
 function daysLeft(p){ if(p.stock==null||p.stock==="") return null; const r=perDay(p)*(p.perDose||1); return r>0?Math.floor(p.stock/r):null; }
 function schedText(p){ const sc=p.schedule; const w=sc.type==="weekdays"?((sc.days||[]).length===7?"Daily":(sc.days||[]).map(d=>DOW[d]).join(", ")):sc.type==="interval"?(sc.every==2?"Every other day":"Every "+sc.every+" days"):"Daily";
  return w+" · "+p.times.map(t=>SLOTNAME[t]).join(", ")+(p.food==="with"?" · with food":p.food==="without"?" · empty stomach":"")+(p.end?(ended(p)?" · finished ":" · until ")+parse(p.end).toLocaleDateString(undefined,{month:"short",day:"numeric"}):""); }
-const doseText=p=>[p.dose,p.unit].filter(x=>x!==""&&x!=null).join(" ")+(p.unit===p.form&&(p.perDose||1)==1?"":p.perDose&&p.perDose!=1?` · ${p.perDose} ${fw(p.form)||"pills"}s`:p.form?` · 1 ${fw(p.form)}`:"");
+const doseText=p=>{ const hasD=p.dose!==""&&p.dose!=null, per=+(p.perDose||1), f=fw(p.form);
+ if(p.form&&p.unit===p.form){ const n=per>1?per:(hasD?+p.dose||1:1); return n+" "+f+(n==1?"":"s"); }
+ const amt=hasD?p.dose+" "+p.unit:""; const cnt=p.form?per+" "+f+(per==1?"":"s"):(per>1?per+" pills":"");
+ return [amt,cnt].filter(Boolean).join(" · "); };
 // ---- actions ----
 let undoFn=null,toastT=null;
 function toast(msg,undo){ $("#toastMsg").textContent=msg; undoFn=undo||null; $("#toastUndo").classList.toggle("hide",!undo); $("#toast").classList.remove("hide"); clearTimeout(toastT); toastT=setTimeout(()=>$("#toast").classList.add("hide"),undo?6000:3500); }
@@ -157,7 +173,7 @@ function setStatus(date,list,s){ // list of {p,key}; returns undo
 }
 function checkLow(list){ const low=list.map(x=>x.p).filter((p,i,a)=>a.indexOf(p)===i).filter(p=>{const d=daysLeft(p);return d!=null&&d<=7}); return low.length?" · "+low.map(p=>p.name).join(", ")+" running low":""; }
 // ---- Today ----
-let VIEWDATE=null;
+let VIEWDATE=null; const EXP=new Set();
 function slotMins(slot){const [h,m]=(S.slotTimes[slot]||"08:00").split(":").map(Number);return h*60+m}
 function render(){ renderToday(); if(!$("#v-stats").classList.contains("hide")) renderStats(); if(!$("#v-supply").classList.contains("hide")) renderSupply(); }
 function renderToday(){ const date=VIEWDATE||today(); const isToday=date===today();
@@ -167,7 +183,7 @@ function renderToday(){ const date=VIEWDATE||today(); const isToday=date===today
  let ban="";
  if(S.sample) ban+=`<div class="banner info"><span>You're looking at <b>sample supplements</b>.</span><button class="btn sm" id="clearSample">Clear sample</button></div>`;
  if(!isToday) ban+=`<div class="banner info"><span>${fut?"Preview of "+esc(d.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"}))+" · log it on the day":"Editing "+esc(d.toLocaleDateString())}</span><button class="btn sm" id="backToday">Back to today</button></div>`;
- if(isToday){ for(const [k,n] of SLOTS){ const pend=doses.filter(x=>x.slot===k&&!status(date,x.key)); if(pend.length&&nowM>slotMins(k)+30) ban+=`<div class="banner"><span>⏰ ${n} is overdue: ${pend.map(x=>esc(x.p.name)).join(", ")}</span></div>`; } }
+ if(isToday){ const od=[]; for(const [k,n] of SLOTS){ const pend=doses.filter(x=>x.slot===k&&!status(date,x.key)); if(pend.length&&nowM>slotMins(k)+30) od.push(`<b>${n}</b> ${pend.map(x=>esc(x.p.name)).join(", ")}`); } if(od.length) ban+=`<div class="banner"><span>⏰ Overdue: ${od.join(" · ")}</span></div>`; }
  const low=S.supps.filter(p=>active(p)&&daysLeft(p)!=null&&daysLeft(p)<=7); if(low.length) ban+=`<div class="banner"><span>📦 Running low: ${low.map(p=>esc(p.name)+" ("+daysLeft(p)+"d)").join(", ")}</span><button class="btn sm" data-go="supply">Supply</button></div>`;
  $("#banners").innerHTML=ban;
  if(!S.supps.length){ $("#todayList").innerHTML=`<div class="card empty"><div style="font-size:40px">💊</div><p><b>No supplements yet</b><br>Add what you take, or try the sample list to look around.</p><p><button class="btn pri" data-add>Add a supplement</button></p><p><button class="btn" id="sampleBtn">Try sample</button></p></div>`; return; }
@@ -176,12 +192,14 @@ function renderToday(){ const date=VIEWDATE||today(); const isToday=date===today
  let html=`<div class="card ring"><svg width="66" height="66" viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="#ece9e2" stroke-width="7"/><circle cx="32" cy="32" r="26" fill="none" stroke="var(--acc)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${C*pct} ${C}" transform="rotate(-90 32 32)"/><text x="32" y="37" text-anchor="middle" font-size="15" font-weight="700" fill="#23302b">${Math.round(pct*100)}%</text></svg><div><b>${total?(fut?total+" dose"+(total==1?"":"s")+" scheduled":taken+" of "+total+" taken"):"Nothing scheduled"}</b><br><span class="muted">${skipped?skipped+" skipped · ":""}${overallStreak()} day streak 🔥</span></div></div>`;
  if(!total) html+=`<div class="card empty">Rest day, nothing is scheduled.</div>`;
  for(const [k,n,ic] of SLOTS){ const g=doses.filter(x=>x.slot===k); if(!g.length) continue; const pending=g.filter(x=>!status(date,x.key));
-  html+=`<div class="card" data-slot="${k}"><div class="slot-h"><div><b>${ic} ${n}</b><small>${esc(S.slotTimes[k])}</small></div>${pending.length?`<button class="btn sm" data-takeall="${k}">Take all (${pending.length})</button>`:`<span class="muted">✓ Done</span>`}</div>`;
+  const done=!pending.length, col=done&&!EXP.has(date+k);
+  html+=`<div class="card ${col?"col":""}" data-slot="${k}"><div class="slot-h" ${done?`data-toggle="${k}"`:""}><div><b>${ic} ${n}</b><small>${esc(S.slotTimes[k])}</small></div>${pending.length?`<button class="btn sm" data-takeall="${k}">Take all (${pending.length})</button>`:`<span class="muted">✓ Done${col?` (${g.length}) ▾`:" ▴"}</span>`}</div>`;
   for(const x of g){ const st=status(date,x.key), p=x.p;
    html+=`<div class="item ${st?"done":""}"><div class="ico" style="background:${p.color}">${esc(p.icon)}</div><div class="mid" data-edit="${p.id}"><b>${esc(p.name)}</b><small>${esc(doseText(p))}${p.food==="with"?" · 🍽 with food":p.food==="without"?" · empty stomach":""}${st==="skipped"?" · skipped":""}</small></div>${st?"":`<button class="skip" data-skip="${x.key}">Skip</button>`}<button class="check ${st==="taken"?"on":st==="skipped"?"sk":""}" data-tap="${x.key}" aria-label="Mark ${esc(p.name)} taken">${st==="taken"?"✓":st==="skipped"?"–":""}</button></div>`; }
   html+=`</div>`; }
  $("#todayList").innerHTML=html; }
-document.addEventListener("click",e=>{ const t=e.target.closest("button,[data-edit],[data-go]"); if(!t) return; const date=VIEWDATE||today();
+document.addEventListener("click",e=>{ const t=e.target.closest("button,[data-edit],[data-go],[data-toggle]"); if(!t) return; const date=VIEWDATE||today();
+ if(t.dataset.toggle){ const id=date+t.dataset.toggle; EXP.has(id)?EXP.delete(id):EXP.add(id); renderToday(); return; }
  if(t.dataset.go){ go(t.dataset.go); return; }
  if(t.hasAttribute("data-add")){ openEditor(null); return; }
  if(t.dataset.edit){ openEditor(S.supps.find(p=>p.id===t.dataset.edit)); return; }
