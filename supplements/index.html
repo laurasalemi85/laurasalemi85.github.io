@@ -305,5 +305,5 @@ function go(v){ ["today","stats","supply","settings"].forEach(k=>$("#v-"+k).clas
 let lastDay=today(); setInterval(()=>{ if(today()!==lastDay){lastDay=today();VIEWDATE=null} if(!$("#v-today").classList.contains("hide")&&$("#sheet").classList.contains("hide")) renderToday(); },60000);
 document.addEventListener("visibilitychange",()=>{ if(!document.hidden){ S=load(); render(); } });
 renderToday(); renderSettings();
-if("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("sw.js").catch(()=>{});
+if("serviceWorker" in navigator && location.protocol.startsWith("http")) {const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(r=>{r.update();document.addEventListener("visibilitychange",()=>{if(!document.hidden)r.update()})}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(had&&!done){done=true;location.reload()}})}
 </script></body></html>
