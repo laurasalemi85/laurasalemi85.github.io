@@ -129,7 +129,9 @@ let saveWarned=false;
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){if(!saveWarned){saveWarned=true;toast("Couldn't save (private browsing?). Changes last until you close the app.")}}}
 const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4);
 // ---- schedule ----
-function isDue(p,date){ if(p.paused) return false; const st=p.schedule.start||p.created||date; if(date<st) return false;
+const ended=p=>!!p.end&&today()>p.end;
+const active=p=>!p.paused&&!ended(p);
+function isDue(p,date){ if(p.paused) return false; if(p.end&&date>p.end) return false; const st=p.schedule.start||p.created||date; if(date<st) return false;
  const sc=p.schedule; if(sc.type==="weekdays") return (sc.days||[]).includes(parse(date).getDay());
  if(sc.type==="interval") return diffD(st,date)%Math.max(1,sc.every||1)===0; return true; }
 function dosesOn(date){ const out=[]; for(const p of S.supps) if(isDue(p,date)) for(const t of p.times) out.push({p,slot:t,key:p.id+"|"+t}); return out; }
@@ -137,7 +139,7 @@ const status=(date,key)=>{const l=S.log[date];return l&&l[key]?l[key].s:null};
 function perDay(p){ const n=p.times.length, sc=p.schedule; return sc.type==="weekdays"?n*(sc.days||[]).length/7:sc.type==="interval"?n/Math.max(1,sc.every||1):n; }
 function daysLeft(p){ if(p.stock==null||p.stock==="") return null; const r=perDay(p)*(p.perDose||1); return r>0?Math.floor(p.stock/r):null; }
 function schedText(p){ const sc=p.schedule; const w=sc.type==="weekdays"?((sc.days||[]).length===7?"Daily":(sc.days||[]).map(d=>DOW[d]).join(", ")):sc.type==="interval"?(sc.every==2?"Every other day":"Every "+sc.every+" days"):"Daily";
- return w+" · "+p.times.map(t=>SLOTNAME[t]).join(", ")+(p.food==="with"?" · with food":p.food==="without"?" · empty stomach":""); }
+ return w+" · "+p.times.map(t=>SLOTNAME[t]).join(", ")+(p.food==="with"?" · with food":p.food==="without"?" · empty stomach":"")+(p.end?(ended(p)?" · finished ":" · until ")+parse(p.end).toLocaleDateString(undefined,{month:"short",day:"numeric"}):""); }
 const doseText=p=>[p.dose,p.unit].filter(x=>x!==""&&x!=null).join(" ")+(p.unit===p.form&&(p.perDose||1)==1?"":p.perDose&&p.perDose!=1?` · ${p.perDose} ${fw(p.form)||"pills"}s`:p.form?` · 1 ${fw(p.form)}`:"");
 // ---- actions ----
 let undoFn=null,toastT=null;
@@ -164,7 +166,7 @@ function renderToday(){ const date=VIEWDATE||today(); const isToday=date===today
  if(S.sample) ban+=`<div class="banner info"><span>You're looking at <b>sample supplements</b>.</span><button class="btn sm" id="clearSample">Clear sample</button></div>`;
  if(!isToday) ban+=`<div class="banner info"><span>Editing ${esc(d.toLocaleDateString())}</span><button class="btn sm" id="backToday">Back to today</button></div>`;
  if(isToday){ for(const [k,n] of SLOTS){ const pend=doses.filter(x=>x.slot===k&&!status(date,x.key)); if(pend.length&&nowM>slotMins(k)+30) ban+=`<div class="banner"><span>⏰ ${n} is overdue: ${pend.map(x=>esc(x.p.name)).join(", ")}</span></div>`; } }
- const low=S.supps.filter(p=>!p.paused&&daysLeft(p)!=null&&daysLeft(p)<=7); if(low.length) ban+=`<div class="banner"><span>📦 Running low: ${low.map(p=>esc(p.name)+" ("+daysLeft(p)+"d)").join(", ")}</span><button class="btn sm" data-go="supply">Supply</button></div>`;
+ const low=S.supps.filter(p=>active(p)&&daysLeft(p)!=null&&daysLeft(p)<=7); if(low.length) ban+=`<div class="banner"><span>📦 Running low: ${low.map(p=>esc(p.name)+" ("+daysLeft(p)+"d)").join(", ")}</span><button class="btn sm" data-go="supply">Supply</button></div>`;
  $("#banners").innerHTML=ban;
  if(!S.supps.length){ $("#todayList").innerHTML=`<div class="card empty"><div style="font-size:40px">💊</div><p><b>No supplements yet</b><br>Add what you take, or try the sample list to look around.</p><p><button class="btn pri" data-add>Add a supplement</button></p><p><button class="btn" id="sampleBtn">Try sample</button></p></div>`; return; }
  const total=doses.length, taken=doses.filter(x=>status(date,x.key)==="taken").length, skipped=doses.filter(x=>status(date,x.key)==="skipped").length;
@@ -215,7 +217,7 @@ function renderStats(){ if(!S.supps.length){ $("#statsBody").innerHTML=`<div cla
 function renderSupply(){ if(!S.supps.length){ $("#supplyBody").innerHTML=`<div class="card empty">No supplements yet.</div>`; return; }
  const list=[...S.supps].sort((a,b)=>(daysLeft(a)??1e9)-(daysLeft(b)??1e9)); let html="";
  for(const p of list){ const dl=daysLeft(p); const tracked=p.stock!=null&&p.stock!=="";
-  html+=`<div class="card"><div class="item" style="border:0;padding:0"><div class="ico" style="background:${p.color}">${esc(p.icon)}</div><div class="mid" data-edit="${p.id}"><b>${esc(p.name)} ${dl!=null&&dl<=7?`<span class="tag">${dl<=0?"Out":"Running low"}</span>`:""}${p.sample?`<span class="tag s">sample</span>`:""}</b><small>${esc(schedText(p))}</small></div></div>`;
+  html+=`<div class="card"><div class="item" style="border:0;padding:0"><div class="ico" style="background:${p.color}">${esc(p.icon)}</div><div class="mid" data-edit="${p.id}"><b>${esc(p.name)} ${ended(p)?`<span class="tag" style="background:#e6efe9;color:#3d6b57">Finished</span>`:dl!=null&&dl<=7?`<span class="tag">${dl<=0?"Out":"Running low"}</span>`:""}${p.sample?`<span class="tag s">sample</span>`:""}</b><small>${esc(schedText(p))}</small></div></div>`;
   if(tracked){ const pct=Math.min(100,dl==null?0:dl/60*100);
    html+=`<div style="display:flex;justify-content:space-between;margin-top:10px"><span><b>${p.stock}</b> <span class="muted">${esc(fw(p.form)||"pill")}s left · ${p.perDose||1} per dose</span></span><span class="${dl<=7?"":"muted"}" style="${dl<=7?"color:var(--warn);font-weight:600":""}">${dl==null?"":"≈ "+dl+" days"}</span></div><div class="bar"><i style="width:${pct}%;background:${dl<=7?"var(--warn)":"var(--acc)"}"></i></div>
    <div class="row" style="margin-top:10px;align-items:center"><input id="rs-${p.id}" type="number" inputmode="numeric" min="1" placeholder="Bottle size" value="${p.bottle||""}"><button class="btn" data-restock="${p.id}">Restocked</button></div>`; }
@@ -236,6 +238,8 @@ function openEditor(p){ const isNew=!p; p=p?JSON.parse(JSON.stringify(p)):{id:ui
  <div id="edDaysWrap" style="margin-top:8px"><div class="chips" id="edDays">${DOW.map((d,i)=>chip(sc.days.includes(i),`data-v="${i}"`,d)).join("")}</div></div>
  <div id="edEveryWrap" class="row" style="margin-top:8px;align-items:center"><span>Every</span><input id="edEvery" type="number" min="2" max="60" value="${sc.every}"><span>days, from</span><input id="edStart" type="date" value="${sc.start}"></div>
  <label class="f">Time of day (pick one or more)</label><div class="chips" id="edTimes">${SLOTS.map(([k,n,ic])=>chip(p.times.includes(k),`data-v="${k}"`,ic+" "+n)).join("")}</div>
+ <label class="f">How long</label><div class="chips" id="edDur">${chip(!p.end,'data-v="0"',"Ongoing")}${[7,14,30].map(n=>chip(false,`data-v="${n}"`,n+" days")).join("")}</div>
+ <div class="row" style="margin-top:8px;align-items:center"><span>Last day</span><input id="edEnd" type="date" value="${p.end||""}"><button type="button" class="btn sm ghost" id="edEndClr">Clear</button></div>
  <label class="f">Food</label><div class="chips" id="edFood">${chip(p.food==="with",'data-v="with"',"With food")}${chip(p.food==="without",'data-v="without"',"Empty stomach")}${chip(p.food==="any",'data-v="any"',"Doesn't matter")}</div>
  <div class="row"><div><label class="f">Pills on hand</label><input id="edStock" type="number" inputmode="numeric" min="0" value="${p.stock??""}" placeholder="optional"></div><div><label class="f">Pills per dose</label><input id="edPer" type="number" inputmode="numeric" min="1" value="${p.perDose||1}"></div><div><label class="f">Bottle size</label><input id="edBottle" type="number" inputmode="numeric" min="1" value="${p.bottle||""}" placeholder="for restock"></div></div>
  <label class="f">Notes</label><input id="edNotes" value="${esc(p.notes)}" placeholder="optional">
@@ -246,15 +250,19 @@ function openEditor(p){ const isNew=!p; p=p?JSON.parse(JSON.stringify(p)):{id:ui
  const multi=(id,arr,num)=>$$(`#${id} [data-v]`).forEach(b=>b.onclick=()=>{ const v=num?+b.dataset.v:b.dataset.v; const i=arr.indexOf(v); i>=0?arr.splice(i,1):arr.push(v); b.classList.toggle("on",i<0); });
  single("edForm",0,v=>{p.form=v;if((v==="subq"||v==="IM")&&p.icon==="💊"){p.icon="💉";document.querySelectorAll("#edIcon .em").forEach(b=>b.classList.toggle("on",b.dataset.v==="💉"));}}); single("edColor",0,v=>p.color=v); single("edIcon",0,v=>p.icon=v); single("edType",0,v=>sc.type=v); single("edFood",0,v=>p.food=v);
  multi("edDays",sc.days,true); multi("edTimes",p.times,false);
+ const durChips=()=>$$("#edDur [data-v]"); const markDur=v=>durChips().forEach(b=>b.classList.toggle("on",b.dataset.v===v));
+ durChips().forEach(b=>b.onclick=()=>{ const n=+b.dataset.v; if(!n){ $("#edEnd").value=""; } else { const base=(sc.type==="interval"?$("#edStart").value:null)||(isNew?today():(sc.start||today())); const b0=base<today()&&isNew?today():base; $("#edEnd").value=addD(b0,n-1); } markDur(b.dataset.v); });
+ $("#edEnd").onchange=()=>markDur($("#edEnd").value?"x":"0"); $("#edEndClr").onclick=()=>{ $("#edEnd").value=""; markDur("0"); };
  function upd(){ $("#edDaysWrap").classList.toggle("hide",sc.type!=="weekdays"); $("#edEveryWrap").classList.toggle("hide",sc.type!=="interval"); }
  upd(); $("#sheet").classList.remove("hide"); document.body.style.overflow="hidden";
  $("#edCancel").onclick=closeSheet;
  $("#edSave").onclick=()=>{ p.name=$("#edName").value.trim(); p.dose=$("#edDose").value.trim(); p.unit=$("#edUnit").value; p.notes=$("#edNotes").value.trim();
   const st=$("#edStock").value; p.stock=st===""?"":Math.max(0,Math.round(+st)); p.perDose=Math.max(1,Math.round(+$("#edPer").value||1)); p.bottle=$("#edBottle").value?Math.round(+$("#edBottle").value):"";
-  sc.every=Math.max(2,Math.round(+$("#edEvery").value||2)); sc.start=$("#edStart").value||today();
+  sc.every=Math.max(2,Math.round(+$("#edEvery").value||2)); sc.start=$("#edStart").value||today(); p.end=$("#edEnd").value||"";
   if(!p.name) return void($("#edErr").textContent="Give it a name.");
   if(!p.times.length) return void($("#edErr").textContent="Pick at least one time of day.");
   if(sc.type==="weekdays"&&!sc.days.length) return void($("#edErr").textContent="Pick at least one day.");
+  if(p.end&&p.end<(sc.type==="interval"?sc.start:(isNew?today():sc.start||today()))) return void($("#edErr").textContent="Last day can\u2019t be before it starts.");
   p.times.sort((a,b)=>SLOTS.findIndex(s=>s[0]===a)-SLOTS.findIndex(s=>s[0]===b)); sc.days.sort();
   if(sc.type!=="interval"&&isNew) sc.start=today();
   const i=S.supps.findIndex(x=>x.id===p.id); if(i>=0) S.supps[i]=p; else S.supps.push(p);
@@ -269,11 +277,11 @@ $("#sheet").addEventListener("click",e=>{ if(e.target.id==="sheet") closeSheet()
 function renderSettings(){
  $("#slotTimes").innerHTML=SLOTS.map(([k,n,ic])=>`<div class="slotline"><span>${ic} ${n}</span><input type="time" data-slottime="${k}" value="${S.slotTimes[k]}"></div>`).join("");
  $$("[data-slottime]").forEach(i=>i.onchange=()=>{ if(i.value){S.slotTimes[i.dataset.slottime]=i.value;save();render();renderSettings()} });
- $("#icsList").innerHTML=SLOTS.map(([k,n,ic])=>{ const c=S.supps.filter(p=>!p.paused&&p.times.includes(k)); return `<div class="slotline"><span>${ic} ${n} <span class="muted">${S.slotTimes[k]} · ${c.length} item${c.length==1?"":"s"}</span></span><button class="btn sm" data-ics="${k}" ${c.length?"":"disabled style='opacity:.4'"}>Add to Calendar</button></div>`; }).join("");
+ $("#icsList").innerHTML=SLOTS.map(([k,n,ic])=>{ const c=S.supps.filter(p=>active(p)&&p.times.includes(k)); return `<div class="slotline"><span>${ic} ${n} <span class="muted">${S.slotTimes[k]} · ${c.length} item${c.length==1?"":"s"}</span></span><button class="btn sm" data-ics="${k}" ${c.length?"":"disabled style='opacity:.4'"}>Add to Calendar</button></div>`; }).join("");
  $$("[data-ics]").forEach(b=>b.onclick=()=>downloadICS(b.dataset.ics));
 }
 function icsEsc(s){return String(s).replace(/\\/g,"\\\\").replace(/;/g,"\\;").replace(/,/g,"\\,").replace(/\n/g,"\\n")}
-function buildICS(slot){ const items=S.supps.filter(p=>!p.paused&&p.times.includes(slot)); const [h,m]=S.slotTimes[slot].split(":");
+function buildICS(slot){ const items=S.supps.filter(p=>active(p)&&p.times.includes(slot)); const [h,m]=S.slotTimes[slot].split(":");
  const d=today().replace(/-/g,""); const stamp=new Date().toISOString().replace(/[-:]/g,"").replace(/\.\d+/,"");
  const allDaily=items.every(p=>p.schedule.type==="daily"); const desc=items.map(p=>`• ${p.name} ${doseText(p)}${p.food==="with"?" (with food)":""} – ${schedText(p).split(" · ")[0]}`).join("\n")+(allDaily?"":"\n(Some items aren't daily – check the app for today's list.)");
  return ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Daily Supplements//EN","CALSCALE:GREGORIAN","BEGIN:VEVENT",`UID:supps-${slot}-${Date.now()}@local`,`DTSTAMP:${stamp}`,`DTSTART:${d}T${h}${m}00`,`DURATION:PT10M`,"RRULE:FREQ=DAILY",
