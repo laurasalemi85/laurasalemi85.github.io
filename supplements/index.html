@@ -108,9 +108,10 @@ const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;"
 const SLOTS=[["morning","Morning","🌅"],["lunch","Lunch","🥗"],["evening","Evening","🌆"],["bedtime","Bedtime","🌙"]];
 const SLOTNAME=Object.fromEntries(SLOTS.map(s=>[s[0],s[1]]));
 const COLORS=["#f6d77a","#a8d5c2","#f2b880","#b9c6f0","#e9a7b4","#c9b6e4","#d8d2c4"];
-const ICONS=["💊","🟡","🐟","☀️","🌿","💧","🍊","⚡","🦴","🧠","❤️","🫚"];
+const ICONS=["💊","💉","🟡","🐟","☀️","🌿","💧","🍊","⚡","🦴","🧠","❤️","🫚"];
 const UNITS=["mg","mcg","IU","g","mL","capsule","tablet","softgel","gummy","drop","scoop"];
-const FORMS=["capsule","tablet","softgel","gummy","powder","liquid","chewable"];
+const fw=f=>(f==="subq"||f==="IM")?"injection":f;
+const FORMS=["capsule","tablet","softgel","gummy","powder","liquid","chewable","subq","IM"];
 const DOW=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 // ---- dates (local) ----
 const pad=n=>String(n).padStart(2,"0");
@@ -137,7 +138,7 @@ function perDay(p){ const n=p.times.length, sc=p.schedule; return sc.type==="wee
 function daysLeft(p){ if(p.stock==null||p.stock==="") return null; const r=perDay(p)*(p.perDose||1); return r>0?Math.floor(p.stock/r):null; }
 function schedText(p){ const sc=p.schedule; const w=sc.type==="weekdays"?((sc.days||[]).length===7?"Daily":(sc.days||[]).map(d=>DOW[d]).join(", ")):sc.type==="interval"?(sc.every==2?"Every other day":"Every "+sc.every+" days"):"Daily";
  return w+" · "+p.times.map(t=>SLOTNAME[t]).join(", ")+(p.food==="with"?" · with food":p.food==="without"?" · empty stomach":""); }
-const doseText=p=>[p.dose,p.unit].filter(x=>x!==""&&x!=null).join(" ")+(p.unit===p.form&&(p.perDose||1)==1?"":p.perDose&&p.perDose!=1?` · ${p.perDose} ${p.form||"pills"}s`:p.form?` · 1 ${p.form}`:"");
+const doseText=p=>[p.dose,p.unit].filter(x=>x!==""&&x!=null).join(" ")+(p.unit===p.form&&(p.perDose||1)==1?"":p.perDose&&p.perDose!=1?` · ${p.perDose} ${fw(p.form)||"pills"}s`:p.form?` · 1 ${fw(p.form)}`:"");
 // ---- actions ----
 let undoFn=null,toastT=null;
 function toast(msg,undo){ $("#toastMsg").textContent=msg; undoFn=undo||null; $("#toastUndo").classList.toggle("hide",!undo); $("#toast").classList.remove("hide"); clearTimeout(toastT); toastT=setTimeout(()=>$("#toast").classList.add("hide"),undo?6000:3500); }
@@ -216,7 +217,7 @@ function renderSupply(){ if(!S.supps.length){ $("#supplyBody").innerHTML=`<div c
  for(const p of list){ const dl=daysLeft(p); const tracked=p.stock!=null&&p.stock!=="";
   html+=`<div class="card"><div class="item" style="border:0;padding:0"><div class="ico" style="background:${p.color}">${esc(p.icon)}</div><div class="mid" data-edit="${p.id}"><b>${esc(p.name)} ${dl!=null&&dl<=7?`<span class="tag">${dl<=0?"Out":"Running low"}</span>`:""}${p.sample?`<span class="tag s">sample</span>`:""}</b><small>${esc(schedText(p))}</small></div></div>`;
   if(tracked){ const pct=Math.min(100,dl==null?0:dl/60*100);
-   html+=`<div style="display:flex;justify-content:space-between;margin-top:10px"><span><b>${p.stock}</b> <span class="muted">${esc(p.form||"pill")}s left · ${p.perDose||1} per dose</span></span><span class="${dl<=7?"":"muted"}" style="${dl<=7?"color:var(--warn);font-weight:600":""}">${dl==null?"":"≈ "+dl+" days"}</span></div><div class="bar"><i style="width:${pct}%;background:${dl<=7?"var(--warn)":"var(--acc)"}"></i></div>
+   html+=`<div style="display:flex;justify-content:space-between;margin-top:10px"><span><b>${p.stock}</b> <span class="muted">${esc(fw(p.form)||"pill")}s left · ${p.perDose||1} per dose</span></span><span class="${dl<=7?"":"muted"}" style="${dl<=7?"color:var(--warn);font-weight:600":""}">${dl==null?"":"≈ "+dl+" days"}</span></div><div class="bar"><i style="width:${pct}%;background:${dl<=7?"var(--warn)":"var(--acc)"}"></i></div>
    <div class="row" style="margin-top:10px;align-items:center"><input id="rs-${p.id}" type="number" inputmode="numeric" min="1" placeholder="Bottle size" value="${p.bottle||""}"><button class="btn" data-restock="${p.id}">Restocked</button></div>`; }
   else html+=`<p class="muted" style="margin:8px 0 0">Supply not tracked. <button class="btn sm ghost" data-edit="${p.id}">Set pills on hand</button></p>`;
   html+=`</div>`; }
@@ -243,7 +244,7 @@ function openEditor(p){ const isNew=!p; p=p?JSON.parse(JSON.stringify(p)):{id:ui
  ${isNew?"":`<div class="row" style="margin-top:10px"><button class="btn ghost" id="edPause">${p.paused?"Resume":"Pause"}</button><button class="btn danger" id="edDel">Delete</button></div>`}`;
  const single=(id,key,set)=>$$(`#${id} [data-v]`).forEach(b=>b.onclick=()=>{ $$(`#${id} [data-v]`).forEach(x=>x.classList.remove("on")); b.classList.add("on"); set(b.dataset.v); upd(); });
  const multi=(id,arr,num)=>$$(`#${id} [data-v]`).forEach(b=>b.onclick=()=>{ const v=num?+b.dataset.v:b.dataset.v; const i=arr.indexOf(v); i>=0?arr.splice(i,1):arr.push(v); b.classList.toggle("on",i<0); });
- single("edForm",0,v=>p.form=v); single("edColor",0,v=>p.color=v); single("edIcon",0,v=>p.icon=v); single("edType",0,v=>sc.type=v); single("edFood",0,v=>p.food=v);
+ single("edForm",0,v=>{p.form=v;if((v==="subq"||v==="IM")&&p.icon==="💊"){p.icon="💉";document.querySelectorAll("#edIcon .em").forEach(b=>b.classList.toggle("on",b.dataset.v==="💉"));}}); single("edColor",0,v=>p.color=v); single("edIcon",0,v=>p.icon=v); single("edType",0,v=>sc.type=v); single("edFood",0,v=>p.food=v);
  multi("edDays",sc.days,true); multi("edTimes",p.times,false);
  function upd(){ $("#edDaysWrap").classList.toggle("hide",sc.type!=="weekdays"); $("#edEveryWrap").classList.toggle("hide",sc.type!=="interval"); }
  upd(); $("#sheet").classList.remove("hide"); document.body.style.overflow="hidden";
