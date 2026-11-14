@@ -6,7 +6,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Supplements">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#f6f4ef">
+<meta name="theme-color" content="#ffffff">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png?v=2">
 <link rel="icon" href="icon-192.png?v=2">
@@ -85,7 +85,19 @@ header{padding:8px 0 2px}header h1{font-size:24px}
 .col .item{display:none}.col .slot-h{margin:0;cursor:pointer}.col .slot-h b{color:var(--mut)}
 .slot-h[data-toggle]{cursor:pointer}
 .future .skip,.future [data-tap],.future [data-takeall]{display:none}
-</style></head><body>
+</style><style>
+/* aqua mist on clean white */
+:root{--bg:#ffffff;--card:#f5f7fa;--ink:#0f1b2d;--mut:#6b7a8c;--line:#e3e9f0;--acc:#4f46e5;--acc2:#e6f6fb}
+.card{box-shadow:0 1px 2px rgba(15,23,42,.04),0 6px 18px rgba(15,23,42,.06)}
+.btn{color:#0e7490}.btn.pri,.fab,.bar i{background:linear-gradient(135deg,#06b6d4,#6366f1)!important;border-color:transparent!important;color:#fff}
+.check.on{background:linear-gradient(135deg,#1d4ed8,#312e81)!important;border-color:transparent!important;color:#fff}
+.fab{box-shadow:0 6px 16px #6366f155}.btn.ghost{background:#eef1f5}.banner.info{color:#0e7490}
+.stats3 div{background:#eef1f5}.heat i,.bar{background:#e3eaf1}.check{border-color:#d5dde7}
+nav{background:rgba(255,255,255,.94)}nav button.on{color:#1d4ed8}
+header h1{background:linear-gradient(135deg,#1d4ed8,#312e81);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sheet{background:#fff}
+</style>
+<script>window.__ringGrad=1</script></head><body>
 <div class="wrap">
 <section id="v-today">
   <header><div><h1 id="hello">Today</h1><div class="daynav"><button type="button" id="dayPrev" aria-label="Previous day">‹</button><span id="todayDate"></span><button type="button" id="dayNext" aria-label="Next day">›</button></div></div><button class="fab" data-add aria-label="Add supplement">+</button></header>
@@ -189,7 +201,7 @@ function renderToday(){ const date=VIEWDATE||today(); const isToday=date===today
  if(!S.supps.length){ $("#todayList").innerHTML=`<div class="card empty"><div style="font-size:40px">💊</div><p><b>No supplements yet</b><br>Add what you take, or try the sample list to look around.</p><p><button class="btn pri" data-add>Add a supplement</button></p><p><button class="btn" id="sampleBtn">Try sample</button></p></div>`; return; }
  const total=doses.length, taken=doses.filter(x=>status(date,x.key)==="taken").length, skipped=doses.filter(x=>status(date,x.key)==="skipped").length;
  const pct=total?taken/total:0, C=2*Math.PI*26;
- let html=`<div class="card ring"><svg width="66" height="66" viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="#ece9e2" stroke-width="7"/><circle cx="32" cy="32" r="26" fill="none" stroke="var(--acc)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${C*pct} ${C}" transform="rotate(-90 32 32)"/><text x="32" y="37" text-anchor="middle" font-size="15" font-weight="700" fill="#23302b">${Math.round(pct*100)}%</text></svg><div><b>${total?(fut?total+" dose"+(total==1?"":"s")+" scheduled":taken+" of "+total+" taken"):"Nothing scheduled"}</b><br><span class="muted">${skipped?skipped+" skipped · ":""}${overallStreak()} day streak 🔥</span></div></div>`;
+ let html=`<div class="card ring"><svg width="66" height="66" viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="#e3eaf1" stroke-width="7"/><defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#06b6d4"/><stop offset="1" stop-color="#6366f1"/></linearGradient></defs><circle cx="32" cy="32" r="26" fill="none" stroke="url(#rg)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${C*pct} ${C}" transform="rotate(-90 32 32)"/><text x="32" y="37" text-anchor="middle" font-size="15" font-weight="700" fill="#23302b">${Math.round(pct*100)}%</text></svg><div><b>${total?(fut?total+" dose"+(total==1?"":"s")+" scheduled":taken+" of "+total+" taken"):"Nothing scheduled"}</b><br><span class="muted">${skipped?skipped+" skipped · ":""}${overallStreak()} day streak 🔥</span></div></div>`;
  if(!total) html+=`<div class="card empty">Rest day, nothing is scheduled.</div>`;
  for(const [k,n,ic] of SLOTS){ const g=doses.filter(x=>x.slot===k); if(!g.length) continue; const pending=g.filter(x=>!status(date,x.key));
   const done=!pending.length, col=done&&!EXP.has(date+k);
