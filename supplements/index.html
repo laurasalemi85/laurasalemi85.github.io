@@ -96,6 +96,49 @@ header{padding:8px 0 2px}header h1{font-size:24px}
 nav{background:rgba(255,255,255,.94)}nav button.on{color:#1d4ed8}
 header h1{color:#111}
 .sheet{background:#fff}
+
+/* streaks, feelings, backup */
+.srow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-top:1px solid var(--line)}
+.srow:first-child{border-top:0;padding-top:2px}
+.srow .lbl{font-weight:600;font-size:15px}
+.srow .val{color:var(--mut);font-size:14px;font-weight:600}
+.toggle{width:46px;height:28px;border-radius:14px;background:#d5dde7;position:relative;flex:none;padding:0;cursor:pointer}
+.toggle.on{background:linear-gradient(135deg,#06b6d4,#6366f1)}
+.toggle i{position:absolute;top:2px;left:2px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(15,23,42,.2);pointer-events:none}
+.toggle.on i{left:auto;right:2px}
+.week-pct{font-size:28px;font-weight:700;letter-spacing:-.6px;color:#111;line-height:1.1}
+.streak-n{text-align:right;flex:none;min-width:64px}
+.streak-n b{display:block;font-size:16px;font-weight:700;white-space:nowrap}
+.streak-n small{color:var(--mut);font-size:11px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cal .dow{font-size:10px;letter-spacing:.4px;color:var(--mut);font-weight:600;padding:2px 0 4px;text-transform:uppercase}
+.cal .d{height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--ink);padding:0}
+.cal .d.taken{background:#d4f4fb;color:#0e7490}
+.cal .d.miss{background:#fde8e4;color:#c4554d}
+.cal .d.part{background:#eef0ff;color:#4338ca}
+.cal .d.today{background:linear-gradient(135deg,#06b6d4,#6366f1);color:#fff}
+.cal .d.fut{color:#c5cdd6;font-weight:500}
+.cal .d.empty{visibility:hidden}
+.calnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.calnav b{font-size:15px;font-weight:700}
+.calnav button{width:30px;height:30px;border-radius:50%;background:#eef1f5;font-size:18px;line-height:1;color:var(--ink)}
+.calnav button:disabled{opacity:.35}
+.legend{display:flex;gap:10px;align-items:center;font-size:11px;color:var(--mut);justify-content:flex-end;margin-top:8px;flex-wrap:wrap}
+.legend i{width:11px;height:11px;border-radius:3px;display:inline-block;margin-right:3px;vertical-align:middle}
+.rate{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--line)}
+.rate:first-of-type{border-top:0;padding-top:2px}
+.rate .rl{width:72px;font-weight:600;font-size:14px;flex:none}
+.pips{display:flex;gap:5px;flex:1;flex-wrap:wrap}
+.pip{width:28px;height:28px;border-radius:50%;border:1.5px solid #d5dde7;background:#fff;color:var(--mut);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0}
+.pip.on{background:linear-gradient(135deg,#1d4ed8,#312e81);border-color:transparent;color:#fff}
+.pip.sym.on{background:linear-gradient(135deg,#fb7185,#be123c);border-color:transparent;color:#fff}
+.pip.none.on{background:linear-gradient(135deg,#06b6d4,#0e7490);border-color:transparent;color:#fff}
+.sym-h{font-size:12px;letter-spacing:.5px;text-transform:uppercase;color:var(--mut);font-weight:600;margin:12px 0 2px}
+.scale-hint{font-size:11px;color:var(--mut);margin:0 0 4px}
+.feel-note{width:100%;min-height:72px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--ink);font:inherit;font-size:14px;resize:none;line-height:1.45}
+.feel-card .slot-h{cursor:pointer}
+.banner .ban-ico{flex:none;width:22px;height:22px}
+.chart-tog{display:flex;gap:6px}
 </style>
 <script>window.__ringGrad=1</script></head><body>
 <div class="wrap">
@@ -119,7 +162,15 @@ header h1{color:#111}
   <div class="card"><p class="muted" style="margin-top:0">iPhone web apps can't reliably send scheduled notifications without a push server, which this app deliberately doesn't use. So: add a repeating Calendar event for each time of day, and Calendar will alert you. In the app, overdue doses show as a banner.</p><div id="icsList"></div>
   <p class="muted">Tip: tap a button, then <b>Add All</b> in the calendar sheet. If you change your schedule, delete the old event and add a new one.</p></div>
   <h2>Backup</h2>
-  <div class="card"><div class="row"><button class="btn" id="exportBtn">Export JSON</button><label class="btn ghost" style="text-align:center">Import JSON<input type="file" id="importFile" accept="application/json,.json" hidden></label></div><p class="muted" id="backupMsg">Your data lives only on this device. Export a backup now and then.</p></div>
+  <div class="card">
+    <div class="srow"><div class="lbl">Last backup</div><div class="val" id="lastBackupVal">Never</div></div>
+    <div class="srow">
+      <div><div class="lbl">Remind me weekly</div><div class="muted" style="font-size:12px;margin-top:1px">A nudge on Today, once a week</div></div>
+      <button type="button" class="toggle on" id="backupRemindToggle" role="switch" aria-checked="true" aria-label="Remind me weekly"><i></i></button>
+    </div>
+    <div class="row" style="margin-top:10px"><button class="btn" id="exportBtn">Export JSON</button><label class="btn ghost" style="text-align:center">Import JSON<input type="file" id="importFile" accept="application/json,.json" hidden></label></div>
+    <p class="muted" id="backupMsg">Your data lives only on this device. Export a backup now and then.</p>
+  </div>
   <h2>Data</h2>
   <div class="card"><div class="row"><button class="btn ghost" id="sampleBtn2">Load sample</button><button class="btn danger" id="clearBtn">Erase everything</button></div>
   <p class="muted">Install: in Safari tap Share → <b>Add to Home Screen</b>. It works offline after that.</p></div>
@@ -150,7 +201,7 @@ const today=()=>ymd(new Date());
 // ---- storage ----
 const KEY="supps.v1";
 let S=load();
-function blank(){return{supps:[],log:{},slotTimes:{morning:"08:00",lunch:"12:30",evening:"18:30",bedtime:"22:00"},sample:false}}
+function blank(){return{supps:[],log:{},feel:{},slotTimes:{morning:"08:00",lunch:"12:30",evening:"18:30",bedtime:"22:00"},sample:false,lastBackup:"",backupRemind:true,backupDismissed:""}}
 function load(){try{const x=JSON.parse(localStorage.getItem(KEY));if(x&&Array.isArray(x.supps))return Object.assign(blank(),x)}catch(e){}return blank()}
 let saveWarned=false;
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){if(!saveWarned){saveWarned=true;toast("Couldn't save (private browsing?). Changes last until you close the app.")}}}
@@ -197,6 +248,7 @@ function renderToday(){ const date=VIEWDATE||today(); const isToday=date===today
  if(!isToday) ban+=`<div class="banner info"><span>${fut?"Preview of "+esc(d.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"}))+" · log it on the day":"Editing "+esc(d.toLocaleDateString())}</span><button class="btn sm" id="backToday">Back to today</button></div>`;
  if(isToday){ const od=[]; for(const [k,n] of SLOTS){ const pend=doses.filter(x=>x.slot===k&&!status(date,x.key)); if(pend.length&&nowM>slotMins(k)+30) od.push(`<b>${n}</b> ${pend.map(x=>esc(x.p.name)).join(", ")}`); } if(od.length) ban+=`<div class="banner"><span>⏰ Overdue: ${od.join(" · ")}</span></div>`; }
  const low=S.supps.filter(p=>active(p)&&daysLeft(p)!=null&&daysLeft(p)<=7); if(low.length) ban+=`<div class="banner"><span>📦 Running low: ${low.map(p=>esc(p.name)+" ("+daysLeft(p)+"d)").join(", ")}</span><button class="btn sm" data-go="supply">Supply</button></div>`;
+ if(isToday) ban+=backupBannerHtml();
  $("#banners").innerHTML=ban;
  if(!S.supps.length){ $("#todayList").innerHTML=`<div class="card empty"><div style="font-size:40px">💊</div><p><b>No supplements yet</b><br>Add what you take, or try the sample list to look around.</p><p><button class="btn pri" data-add>Add a supplement</button></p><p><button class="btn" id="sampleBtn">Try sample</button></p></div>`; return; }
  const total=doses.length, taken=doses.filter(x=>status(date,x.key)==="taken").length, skipped=doses.filter(x=>status(date,x.key)==="skipped").length;
@@ -209,8 +261,9 @@ function renderToday(){ const date=VIEWDATE||today(); const isToday=date===today
   for(const x of g){ const st=status(date,x.key), p=x.p;
    html+=`<div class="item ${st?"done":""}"><div class="ico" style="background:${p.color}">${esc(p.icon)}</div><div class="mid" data-edit="${p.id}"><b>${esc(p.name)}</b><small>${esc(doseText(p))}${p.food==="with"?" · 🍽 with food":p.food==="without"?" · empty stomach":""}${st==="skipped"?" · skipped":""}</small></div>${st?"":`<button class="skip" data-skip="${x.key}">Skip</button>`}<button class="check ${st==="taken"?"on":st==="skipped"?"sk":""}" data-tap="${x.key}" aria-label="Mark ${esc(p.name)} taken">${st==="taken"?"✓":st==="skipped"?"–":""}</button></div>`; }
   html+=`</div>`; }
+ html+=feelCardHtml(date,fut);
  $("#todayList").innerHTML=html; }
-document.addEventListener("click",e=>{ const t=e.target.closest("button,[data-edit],[data-go],[data-toggle]"); if(!t) return; const date=VIEWDATE||today();
+document.addEventListener("click",e=>{ const t=e.target.closest("button,[data-edit],[data-go],[data-toggle],[data-day],[data-pip],[data-cal],[data-chart],[data-feeltoggle]"); if(!t) return; const date=VIEWDATE||today();
  if(t.dataset.toggle){ const id=date+t.dataset.toggle; EXP.has(id)?EXP.delete(id):EXP.add(id); renderToday(); return; }
  if(t.dataset.go){ go(t.dataset.go); return; }
  if(t.hasAttribute("data-add")){ openEditor(null); return; }
@@ -223,11 +276,19 @@ document.addEventListener("click",e=>{ const t=e.target.closest("button,[data-ed
  if(t.id==="sampleBtn"||t.id==="sampleBtn2"){ loadSample(); return; }
  if(t.id==="clearSample"){ S=blank(); save(); render(); toast("Sample cleared"); return; }
  if(t.id==="backToday"){ VIEWDATE=null; renderToday(); return; }
+ if(t.id==="saveBackup"){ exportBackup(); return; }
+ if(t.id==="dismissBackup"){ S.backupDismissed=today(); save(); renderToday(); return; }
+ if(t.id==="backupRemindToggle"){ S.backupRemind=S.backupRemind===false; save(); renderSettings(); renderToday(); return; }
+ if(t.dataset.feeltoggle){ FEEL_OPEN=!FEEL_OPEN; renderToday(); return; }
+ if(t.dataset.pip){ const k=t.dataset.pip, n=+t.dataset.n; const cur=dayFeel(date)[k]; setFeel(date,k,cur===n?null:n); renderToday(); if(!$("#v-stats").classList.contains("hide")) renderStats(); return; }
+ if(t.dataset.cal){ CALMONTH=addMonth(CALMONTH||monthOf(today()),+t.dataset.cal); renderStats(); return; }
+ if(t.dataset.chart){ CHARTMODE=t.dataset.chart; renderStats(); return; }
  if(t.id==="dayPrev"||t.id==="dayNext"){ const nd=addD(date,t.id==="dayNext"?1:-1); VIEWDATE=nd===today()?null:nd; renderToday(); return; }
  if(date>today()&&(t.dataset.tap||t.dataset.skip||t.dataset.takeall)) return;
  if(t.dataset.day){ VIEWDATE=t.dataset.day===today()?null:t.dataset.day; go("today"); return; }
  if(t.dataset.restock){ const p=S.supps.find(p=>p.id===t.dataset.restock); const inp=$(`#rs-${p.id}`); const n=Math.round(+inp.value); if(!(n>0)){inp.focus();return} const old=p.stock; p.stock=(+p.stock||0)+n; save(); renderSupply(); renderToday(); toast(`Restocked ${p.name}: +${n}`,()=>{p.stock=old;save();renderSupply();renderToday()}); return; }
 });
+document.addEventListener("input",e=>{ if(e.target.id!=="feelNote") return; const date=VIEWDATE||today(); setFeel(date,"note",e.target.value); });
 // ---- streaks & stats ----
 function dayState(date){ const d=dosesOn(date); if(!d.length) return null; const tk=d.filter(x=>status(date,x.key)==="taken").length; return {n:d.length,tk}; }
 function overallStreak(){ let s=0, d=today(); const st0=dayState(d); if(!(st0&&st0.tk===st0.n)) d=addD(d,-1); for(let i=0;i<1000;i++,d=addD(d,-1)){ const st=dayState(d); if(st==null){ if(!S.supps.some(p=>(p.schedule.start||p.created)<=d)) break; continue; } if(st.tk===st.n) s++; else break; } return s; }
@@ -235,19 +296,98 @@ function suppStreak(p){ let s=0,d=today(); const ok=d=>p.times.every(t=>status(d
  const st=p.schedule.start||p.created; for(let i=0;i<1000&&d>=st;i++,d=addD(d,-1)){ if(!isDue(p,d)) continue; if(ok(d)) s++; else break; } return s; }
 function best(p){ let b=0,c=0; const st=p.schedule.start||p.created; for(let d=st;d<=today();d=addD(d,1)){ if(!isDue(p,d)) continue; if(p.times.every(t=>status(d,p.id+"|"+t)==="taken")){c++;b=Math.max(b,c)} else if(d!==today()) c=0; } return b; }
 function adherence(days,p){ let due=0,tk=0; const t=today(); for(let i=0;i<days;i++){ const d=addD(t,-i); for(const x of dosesOn(d)){ if(p&&x.p!==p) continue; const st=status(d,x.key); if(d===t&&!st) continue; due++; if(st==="taken") tk++; } } return due?Math.round(tk/due*100):null; }
+
+const FEEL_POS=[["energy","Energy"],["sleep","Sleep"],["mood","Mood"]];
+const FEEL_SYM=[["gi","GI"],["pelvic","Pelvic pain"],["headache","Headache"]];
+let FEEL_OPEN=false, CALMONTH=null, CHARTMODE="feel";
+function monthOf(d){return d.slice(0,7)}
+function addMonth(ym,n){const [y,m]=ym.split("-").map(Number);const dt=new Date(y,m-1+n,1);return dt.getFullYear()+"-"+pad(dt.getMonth()+1)}
+function monthLabel(ym){const [y,m]=ym.split("-").map(Number);return new Date(y,m-1,1).toLocaleDateString(undefined,{month:"long",year:"numeric"})}
+function shortDate(d){return parse(d).toLocaleDateString(undefined,{month:"short",day:"numeric"})}
+function dayFeel(date){return (S.feel&&S.feel[date])||{}}
+function setFeel(date,key,val){ if(!S.feel) S.feel={}; const f=S.feel[date]||(S.feel[date]={}); if(val==null||val==="") delete f[key]; else f[key]=val; if(!Object.keys(f).length) delete S.feel[date]; save(); }
+function feelSummary(date){ const f=dayFeel(date); const bits=[]; for(const [k,l] of FEEL_POS) if(f[k]!=null) bits.push(l+" "+f[k]); for(const [k,l] of FEEL_SYM) if(f[k]!=null&&f[k]>0) bits.push(l+" "+f[k]); if(f.note) bits.push("Note"); return bits.length?bits.join(" · "):""; }
+function backupDue(){ if(S.backupRemind===false) return false; const has=S.supps.length||Object.keys(S.log||{}).length||Object.keys(S.feel||{}).length; if(!has) return false; if(!S.lastBackup) return true; return diffD(S.lastBackup,today())>=7; }
+function backupBannerHtml(){ if(!backupDue()||S.backupDismissed===today()) return ""; const msg=S.lastBackup?`It's been ${diffD(S.lastBackup,today())} days since your last backup`:"You haven't saved a backup yet";
+ return `<div class="banner info" style="align-items:center"><span style="display:flex;align-items:center;gap:8px;min-width:0"><svg class="ban-ico" viewBox="0 0 22 22" aria-hidden="true"><defs><linearGradient id="bkic" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#06b6d4"/><stop offset="1" stop-color="#6366f1"/></linearGradient></defs><circle cx="11" cy="11" r="11" fill="url(#bkic)"/><path d="M11 5.5v7.2M8 10.2l3 3 3-3M6.5 16h9" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>${msg}</span></span><span style="display:flex;align-items:center;gap:4px;flex:none"><button type="button" class="btn sm pri" id="saveBackup">Save backup</button><button type="button" class="btn sm ghost" id="dismissBackup" aria-label="Dismiss" style="padding:6px 8px">✕</button></span></div>`; }
+function feelCardHtml(date,fut){ const f=dayFeel(date); const sum=feelSummary(date); const open=FEEL_OPEN;
+ const pip=(kind,key,n,on,extra="")=>`<button type="button" class="pip ${extra} ${on?"on":""}" data-pip="${key}" data-n="${n}" aria-label="${kind} ${n}${on?" (selected, tap to clear)":""}">${n}</button>`;
+ let body="";
+ if(open){ body+=`<div style="margin-top:8px">`;
+  for(const [k,l] of FEEL_POS){ body+=`<div class="rate"><div class="rl">${l}</div><div class="pips">${[1,2,3,4,5].map(n=>pip(l,k,n,f[k]===n)).join("")}</div></div>`; }
+  body+=`<div class="sym-h">Symptoms</div><p class="scale-hint">Severity: 0 = none, 5 = severe</p>`;
+  for(const [k,l] of FEEL_SYM){ body+=`<div class="rate"><div class="rl">${l}</div><div class="pips">${[0,1,2,3,4,5].map(n=>pip(l,k,n,f[k]===n,n===0?"none":"sym")).join("")}</div></div>`; }
+  body+=`<label class="muted" style="display:block;margin:10px 0 6px;font-weight:600;font-size:12px;letter-spacing:.3px">NOTE</label>`;
+  body+=`<textarea class="feel-note" id="feelNote" rows="3" placeholder="How did today go?">${esc(f.note||"")}</textarea>`;
+  body+=`<p class="muted" style="margin:8px 0 0"><button type="button" class="btn sm" data-go="stats">Look back on Progress →</button></p></div>`; }
+ return `<div class="card feel-card"><div class="slot-h" data-feeltoggle="1"><div><b>How you felt</b>${sum?`<div class="muted" style="font-size:12px;font-weight:400;white-space:normal">${esc(sum)}</div>`:(open?"":`<div class="muted" style="font-size:12px;font-weight:400">Tap to log</div>`)}</div><span class="muted">${open?"▴":"▾"}</span></div>${body}</div>`; }
+function weekAdherence(){ const t=today(); const sun=addD(t,-parse(t).getDay()); let due=0,tk=0,sk=0;
+ for(let d=sun;d<=t;d=addD(d,1)){ for(const x of dosesOn(d)){ const st=status(d,x.key); if(d===t&&!st) continue; due++; if(st==="taken") tk++; else if(st==="skipped") sk++; } }
+ return {due,tk,sk,pct:due?Math.round(tk/due*100):null}; }
+function feelChartHtml(){ const days=21, t=today(), first=addD(t,-(days-1));
+ const series=CHARTMODE==="feel"?FEEL_POS.map(([k,l,c],i)=>({k,l,c:["#06b6d4","#4f46e5","#db2777"][i]})):FEEL_SYM.map(([k,l],i)=>({k,l,c:["#f59e0b","#db2777","#7c3aed"][i]}));
+ const W=330,H=130,lpad=8,rpad=8,top=28,bot=28,iw=W-lpad-rpad,ih=H-top-bot;
+ const xOf=i=>lpad+iw*(days===1?0:i/(days-1));
+ const maxV=5, minV=CHARTMODE==="feel"?1:0;
+ const yOf=v=>top+ih*(1-(v-minV)/(maxV-minV));
+ let grid="", lines="";
+ [CHARTMODE==="feel"?1:0, CHARTMODE==="feel"?3:2, 5].forEach(v=>{ grid+=`<line x1="${lpad}" y1="${yOf(v)}" x2="${W-rpad}" y2="${yOf(v)}" stroke="#e3e9f0" stroke-width="1"/>`; });
+ const ptsFor=k=>{ const pts=[]; for(let i=0;i<days;i++){ const d=addD(first,i), f=dayFeel(d); if(f[k]==null) continue; pts.push([xOf(i),yOf(+f[k]),d]); } return pts; };
+ for(const s of series){ const pts=ptsFor(s.k); if(pts.length<1) continue;
+  if(pts.length>=2) lines+=`<polyline fill="none" stroke="${s.c}" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" points="${pts.map(p=>p[0]+","+p[1]).join(" ")}"/>`;
+  for(const p of pts) lines+=`<circle cx="${p[0]}" cy="${p[1]}" r="2.2" fill="${s.c}"/>`; }
+ // start markers
+ const starts={};
+ for(const p of S.supps){ const d=p.schedule&&p.schedule.start||p.created; if(d&&d>=first&&d<=t) (starts[d]||(starts[d]=[])).push(p); }
+ let marks="";
+ const dates=Object.keys(starts).sort();
+ dates.forEach((d,idx)=>{ const i=diffD(first,d), x=xOf(i);
+  marks+=`<line x1="${x}" y1="${top-8}" x2="${x}" y2="${top+ih}" stroke="#4f46e5" stroke-width="1.25" stroke-dasharray="3 3" opacity=".8"/>`;
+  const names=starts[d].map(p=>p.name); const label=names.length===1?"Started "+names[0]: "Started "+names.length+" supplements";
+  const tw=Math.min(160, 8*label.length); let lx=x, anchor="middle";
+  if(x<tw/2+4){ lx=x+4; anchor="start"; } else if(x>W-tw/2-4){ lx=x-4; anchor="end"; }
+  const ytag=idx%2===0?2:14;
+  marks+=`<text x="${lx}" y="${ytag+10}" text-anchor="${anchor}" font-size="9" font-weight="700" fill="#4338ca" font-family="-apple-system,Helvetica,Arial,sans-serif">${esc(label)}</text>`; });
+ const mid=addD(first,Math.floor((days-1)/2));
+ const svg=`<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" style="display:block">${grid}${marks}${lines}
+  <text x="${lpad}" y="${H-2}" font-size="9" fill="#6b7a8c" font-family="-apple-system,Helvetica,Arial,sans-serif">${esc(shortDate(first))}</text>
+  <text x="${W/2}" y="${H-2}" text-anchor="middle" font-size="9" fill="#6b7a8c" font-family="-apple-system,Helvetica,Arial,sans-serif">${esc(shortDate(mid))}</text>
+  <text x="${W-rpad}" y="${H-2}" text-anchor="end" font-size="9" fill="#6b7a8c" font-family="-apple-system,Helvetica,Arial,sans-serif">${esc(shortDate(t))}</text></svg>`;
+ const legend=series.map(s=>`<span><i style="background:${s.c};border-radius:6px"></i>${esc(s.l)}</span>`).join("");
+ const empty=!series.some(s=>ptsFor(s.k).length);
+ return `<h2>How you felt</h2><div class="card" style="padding:12px">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
+    <b style="font-size:15px">${CHARTMODE==="feel"?"Energy, sleep & mood":"Symptoms"}</b>
+    <div class="chart-tog">
+      <button type="button" class="chip ${CHARTMODE==="feel"?"on":""}" data-chart="feel">Feelings</button>
+      <button type="button" class="chip ${CHARTMODE==="feel"?"":"on"}" data-chart="sym">Symptoms</button>
+    </div>
+  </div>
+  <p class="muted" style="margin:0 0 4px;font-size:11px">Last ${days} days${CHARTMODE==="sym"?" · 0 = none, 5 = severe":" · 1–5, higher is better"}</p>
+  ${empty?`<p class="muted" style="margin:12px 0">No check-ins in this window yet. Log how you felt on Today.</p>`:svg}
+  ${empty?"":`<div class="legend" style="justify-content:flex-start;margin-top:4px">${legend}</div>`}
+ </div>`; }
+
 function renderStats(){ if(!S.supps.length){ $("#statsBody").innerHTML=`<div class="card empty">Add supplements to see your progress.</div>`; return; }
- const t=today(); const weeks=13; const end=parse(t); const start=addD(t,-(weeks*7-1)-end.getDay()+6-6); // align: columns are weeks starting Sunday
- const first=addD(t,-((weeks-1)*7+end.getDay())); let cells="";
- for(let d=first;d<=addD(t,6-end.getDay());d=addD(d,1)){ const st=d<=t?dayState(d):null; let c="#ece9e2",title=d;
-  if(d>t) c="transparent"; else if(st){ const f=st.tk/st.n; c=f===1?"#4f9a80":f>=.66?"#86c0a9":f>0?"#c5e0d4":"#efd9c3"; title+=` · ${st.tk}/${st.n}`; }
-  cells+=`<i style="background:${c}" title="${title}" ${d<=t?`data-day="${d}" role="button"`:""}></i>`; }
- const a7=adherence(7), a30=adherence(30);
- let html=`<div class="card"><div class="stats3"><div><b>${overallStreak()}🔥</b><small>day streak</small></div><div><b>${a7==null?"–":a7+"%"}</b><small>7-day adherence</small></div><div><b>${a30==null?"–":a30+"%"}</b><small>30-day adherence</small></div></div></div>
- <h2>Last 13 weeks</h2><div class="card"><div class="heatwrap"><div class="dl">${DOW.map((d,i)=>`<span>${i%2?d[0]:""}</span>`).join("")}</div><div class="heat" style="flex:1">${cells}</div></div>
- <div class="legend">Less <i style="background:#efd9c3"></i><i style="background:#c5e0d4"></i><i style="background:#86c0a9"></i><i style="background:#4f9a80"></i> All taken</div><p class="muted" style="margin:6px 0 0">Tap a day to view or fix it.</p></div><h2>By supplement</h2><div class="card">`;
- for(const p of S.supps){ const a=adherence(30,p); html+=`<div class="item"><div class="ico" style="background:${p.color}">${esc(p.icon)}</div><div class="mid"><b>${esc(p.name)}</b><small>🔥 ${suppStreak(p)} streak · best ${best(p)}</small><div class="bar"><i style="width:${a||0}%"></i></div></div><div style="text-align:right;min-width:48px"><b>${a==null?"–":a+"%"}</b><small class="muted">30d</small></div></div>`; }
- $("#statsBody").innerHTML=html+`</div>`;
- $$(".heat i[data-day]").forEach(i=>i.onclick=()=>{VIEWDATE=i.dataset.day===today()?null:i.dataset.day;go("today")}); }
+ const t=today(); if(!CALMONTH) CALMONTH=monthOf(t);
+ const w=weekAdherence();
+ const C=2*Math.PI*26, pct=w.pct==null?0:w.pct/100;
+ let html=`<div class="card ring" style="padding:12px"><svg width="58" height="58" viewBox="0 0 64 64" style="width:58px;height:58px"><circle cx="32" cy="32" r="26" fill="none" stroke="#e3eaf1" stroke-width="7"/><defs><linearGradient id="rgw" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#06b6d4"/><stop offset="1" stop-color="#6366f1"/></linearGradient></defs><circle cx="32" cy="32" r="26" fill="none" stroke="url(#rgw)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${C*pct} ${C}" transform="rotate(-90 32 32)"/><text x="32" y="37" text-anchor="middle" font-size="15" font-weight="700" fill="#0f1b2d">${w.pct==null?"–":w.pct+"%"}</text></svg><div><div class="muted" style="font-size:11px;font-weight:600;letter-spacing:.6px;text-transform:uppercase">This week</div><div class="week-pct">${w.pct==null?"No doses":w.pct+"% taken"}</div><span class="muted">${w.due?w.tk+" of "+w.due+" doses":"Nothing scheduled yet"}${w.sk?" · "+w.sk+" skipped":""}${overallStreak()?" · "+overallStreak()+" day streak 🔥":""}</span></div></div>`;
+ const [yy,mm]=CALMONTH.split("-").map(Number); const firstDow=new Date(yy,mm-1,1).getDay(); const nDays=new Date(yy,mm,0).getDate();
+ const canNext=CALMONTH<monthOf(t);
+ html+=`<h2 style="margin-top:16px">Calendar</h2><div class="card" style="padding:10px 12px 8px"><div class="calnav"><button type="button" data-cal="-1" aria-label="Previous month">‹</button><b>${esc(monthLabel(CALMONTH))}</b><button type="button" data-cal="1" aria-label="Next month" ${canNext?"":"disabled"}>›</button></div><div class="cal">`;
+ html+=["S","M","T","W","T","F","S"].map(x=>`<div class="dow">${x}</div>`).join("");
+ for(let i=0;i<firstDow;i++) html+=`<div class="d empty"></div>`;
+ for(let day=1;day<=nDays;day++){ const d=CALMONTH+"-"+pad(day); const st=d<=t?dayState(d):null; let cls="d";
+  if(d>t) cls+=" fut"; else if(d===t) cls+=" today"; else if(st){ const f=st.tk/st.n; cls+=f===1?" taken":f>0?" part":" miss"; }
+  html+=`<button type="button" class="${cls}" ${d<=t?`data-day="${d}"`:""} ${d>t?"disabled":""}>${day}</button>`; }
+ html+=`</div><div class="legend"><span><i style="background:#d4f4fb"></i>Taken</span><span><i style="background:#eef0ff"></i>Partial</span><span><i style="background:#fde8e4"></i>Missed</span><span><i style="background:linear-gradient(135deg,#06b6d4,#6366f1)"></i>Today</span></div><p class="muted" style="margin:6px 0 0">Tap a day to view or fix it.</p></div>`;
+ html+=`<h2>By supplement</h2><div class="card">`;
+ const list=[...S.supps].sort((a,b)=>(active(b)-active(a))||a.name.localeCompare(b.name));
+ for(const p of list){ const a=adherence(30,p), st=suppStreak(p); html+=`<div class="item"><div class="ico" style="background:${p.color}">${esc(p.icon)}</div><div class="mid"><b>${esc(p.name)}${p.paused?" <span class='tag s'>paused</span>":ended(p)?" <span class='tag'>finished</span>":""}</b><small>${a==null?"–":a+"% in 30d"} · best ${best(p)}</small></div><div class="streak-n"><b>🔥 ${st} day${st===1?"":"s"}</b><small>streak</small></div></div>`; }
+ html+=`</div>`+feelChartHtml();
+ $("#statsBody").innerHTML=html; }
+
 function renderSupply(){ if(!S.supps.length){ $("#supplyBody").innerHTML=`<div class="card empty">No supplements yet.</div>`; return; }
  const list=[...S.supps].sort((a,b)=>(daysLeft(a)??1e9)-(daysLeft(b)??1e9)); let html="";
  for(const p of list){ const dl=daysLeft(p); const tracked=p.stock!=null&&p.stock!=="";
@@ -313,6 +453,9 @@ function renderSettings(){
  $$("[data-slottime]").forEach(i=>i.onchange=()=>{ if(i.value){S.slotTimes[i.dataset.slottime]=i.value;save();render();renderSettings()} });
  $("#icsList").innerHTML=SLOTS.map(([k,n,ic])=>{ const c=S.supps.filter(p=>active(p)&&p.times.includes(k)); return `<div class="slotline"><span>${ic} ${n} <span class="muted">${S.slotTimes[k]} · ${c.length} item${c.length==1?"":"s"}</span></span><button class="btn sm" data-ics="${k}" ${c.length?"":"disabled style='opacity:.4'"}>Add to Calendar</button></div>`; }).join("");
  $$("[data-ics]").forEach(b=>b.onclick=()=>downloadICS(b.dataset.ics));
+ const lb=$("#lastBackupVal"), tg=$("#backupRemindToggle");
+ if(lb) lb.textContent=S.lastBackup?shortDate(S.lastBackup):"Never";
+ if(tg){ const on=S.backupRemind!==false; tg.classList.toggle("on",on); tg.setAttribute("aria-checked",on?"true":"false"); }
 }
 function icsEsc(s){return String(s).replace(/\\/g,"\\\\").replace(/;/g,"\\;").replace(/,/g,"\\,").replace(/\n/g,"\\n")}
 function buildICS(slot){ const items=S.supps.filter(p=>active(p)&&p.times.includes(slot)); const [h,m]=S.slotTimes[slot].split(":");
@@ -322,7 +465,8 @@ function buildICS(slot){ const items=S.supps.filter(p=>active(p)&&p.times.includ
   `SUMMARY:${icsEsc("💊 "+SLOTNAME[slot]+" supplements")}`,`DESCRIPTION:${icsEsc(desc)}`,"BEGIN:VALARM","ACTION:DISPLAY",`DESCRIPTION:${icsEsc(SLOTNAME[slot]+" supplements")}`,"TRIGGER:PT0M","END:VALARM","END:VEVENT","END:VCALENDAR"].join("\r\n")+"\r\n"; }
 function download(name,text,type){ const blob=new Blob([text],{type}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000); }
 function downloadICS(slot){ download(`supplements-${slot}.ics`,buildICS(slot),"text/calendar"); toast("Calendar file ready, tap Add All"); }
-$("#exportBtn").onclick=()=>{ download(`supplements-backup-${today()}.json`,JSON.stringify({app:"daily-supplements",version:1,exported:new Date().toISOString(),data:S},null,2),"application/json"); $("#backupMsg").textContent="Backup exported "+new Date().toLocaleString(); };
+function exportBackup(){ S.lastBackup=today(); S.backupDismissed=""; save(); download(`supplements-backup-${today()}.json`,JSON.stringify({app:"daily-supplements",version:2,exported:new Date().toISOString(),data:S},null,2),"application/json"); const msg="Backup exported "+new Date().toLocaleString(); if($("#backupMsg")) $("#backupMsg").textContent=msg; renderToday(); renderSettings(); toast("Backup saved"); }
+$("#exportBtn").onclick=()=>exportBackup();
 $("#importFile").onchange=async e=>{ const f=e.target.files[0]; e.target.value=""; if(!f) return; try{ const j=JSON.parse(await f.text()); const d=j.data||j; if(!Array.isArray(d.supps)||typeof d.log!=="object") throw new Error("not a supplements backup"); S=Object.assign(blank(),d); save(); render(); renderSettings(); $("#backupMsg").textContent=`Imported ${S.supps.length} supplements.`; toast("Backup restored"); }catch(err){ $("#backupMsg").textContent="Import failed: "+err.message; } };
 let clrArm=false; $("#clearBtn").onclick=e=>{ if(!clrArm){clrArm=true;e.target.textContent="Tap again to erase";setTimeout(()=>{clrArm=false;e.target.textContent="Erase everything"},3500);return} clrArm=false;e.target.textContent="Erase everything"; S=blank(); save(); render(); renderSettings(); toast("All data erased"); };
 // ---- sample ----
@@ -332,14 +476,22 @@ function loadSample(){ const t=today(), st=addD(t,-75);
  S.supps=[mk("Vitamin D3","2000","IU","softgel","#f6d77a","☀️","daily",["morning"],"with",54,1,90),
   mk("Omega-3","1000","mg","softgel","#a8d5c2","🐟","daily",["morning","evening"],"with",9,1,120),
   mk("Multivitamin","1","tablet","tablet","#f2b880","🍊","weekdays",["lunch"],"with",40,1,60,{days:[1,2,3,4,5]}),
-  mk("Magnesium glycinate","200","mg","capsule","#c9b6e4","🌙","daily",["bedtime"],"any",66,2,120),
+  mk("Magnesium glycinate","200","mg","capsule","#c9b6e4","🌙","daily",["bedtime"],"any",66,2,120,{start:addD(t,-10)}),
   mk("Vitamin B12","1000","mcg","tablet","#e9a7b4","⚡","interval",["morning"],"without",20,1,60,{every:3})];
  // history with ~88% adherence, a few rough patches
  let seed=42; const rnd=()=>((seed=seed*16807%2147483647)/2147483647);
  for(let d=st;d<t;d=addD(d,1)){ const rough=diffD(st,d)%23<2; for(const x of dosesOn(d)){ const r=rnd(); const s=r<(rough?.45:.93)?"taken":r<(rough?.6:.97)?"skipped":null; if(s)(S.log[d]||(S.log[d]={}))[x.key]={s,t:0}; } }
  // keep the last week clean so there's a streak
  for(let i=1;i<=6;i++){ const d=addD(t,-i); for(const x of dosesOn(d)) (S.log[d]||(S.log[d]={}))[x.key]={s:"taken",t:0}; }
- save(); VIEWDATE=null; go("today"); renderSettings(); toast("Sample supplements loaded"); }
+ // daily check-ins; sleep/energy rise after magnesium starts
+ S.feel={}; const mag0=addD(t,-10);
+ for(let i=20;i>=1;i--){ const d=addD(t,-i), after=d>=mag0, jitter=((i*17)%5); const en=Math.max(1,Math.min(5,(after?3:2)+((i%3)===0?1:0)+(after&&i<8?1:0)));
+  const sl=Math.max(1,Math.min(5,(after?4:2)+(i%4===0?1:0))); const mo=Math.max(1,Math.min(5,(after?3:2)+(i%5===0?1:0)));
+  const gi=(i%7===1?2:i%11===0?1:0), pel=(i%9===2?2:0), hd=(i%8===3?1:0);
+  S.feel[d]={energy:en,sleep:sl,mood:mo,gi,pelvic:pel,headache:hd}; if(i===3) S.feel[d].note="Slept through the night for the first time this week. Magnesium seems to be helping."; }
+ S.feel[addD(t,-1)]={energy:4,sleep:5,mood:4,gi:0,pelvic:0,headache:0,note:"Slept through the night for the first time this week. Magnesium seems to be helping."};
+ S.lastBackup=addD(t,-7); S.backupRemind=true; S.backupDismissed="";
+ save(); VIEWDATE=null; FEEL_OPEN=false; CALMONTH=monthOf(t); go("today"); renderSettings(); toast("Sample supplements loaded"); }
 // ---- nav ----
 function go(v){ ["today","stats","supply","settings"].forEach(k=>$("#v-"+k).classList.toggle("hide",k!==v)); $$("nav button").forEach(b=>b.classList.toggle("on",b.dataset.go===v)); window.scrollTo(0,0);
  if(v==="today") renderToday(); if(v==="stats") renderStats(); if(v==="supply") renderSupply(); if(v==="settings") renderSettings(); }
